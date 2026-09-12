@@ -1,5 +1,6 @@
 import './App.css'
 import FruitListPractice from './components/FruitListPractice.jsx'
+import FruitInventoryPractice from './components/FruitInventoryPractice.jsx'
 
 function App() {
   return (
@@ -11,6 +12,7 @@ function App() {
 
       <main>
         <FruitListPractice />
+        <FruitInventoryPractice />
       </main>
     </div>
   )
