@@ -7,6 +7,7 @@ import FruitOverview from './pages/FruitOverview.jsx'
 import FruitReviews from './pages/FruitReviews.jsx'
 import LoginPage from './pages/LoginPage.jsx'
 import MyPage from './pages/MyPage.jsx'
+import PostListPage from './pages/PostListPage.jsx'
 import ProtectedRoute from './components/ProtectedRoute.jsx'
 
 function App() {
@@ -21,6 +22,7 @@ function App() {
             <Link to="/fruits">과일 카탈로그</Link>
             <Link to="/mypage">마이페이지 (보호됨)</Link>
             <Link to="/login">로그인</Link>
+            <Link to="/posts">게시글 목록 (API)</Link>
           </nav>
         </header>
 
@@ -36,6 +38,7 @@ function App() {
             </Route>
 
             <Route path="/login" element={<LoginPage />} />
+            <Route path="/posts" element={<PostListPage />} />
             <Route
               path="/mypage"
               element={
