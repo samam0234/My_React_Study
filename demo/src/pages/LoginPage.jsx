@@ -1,9 +1,10 @@
 import { useLocation, useNavigate } from 'react-router-dom'
-import { useAuth } from '../context/AuthContext.jsx'
+import { useAuthStore } from '../store/authStore.js'
 
-// study8: fakeAuth.login() 대신 Context의 login()을 사용. 사용자 정보(user 객체)까지 저장.
+// study9: Context의 useAuth().login 대신 스토어의 login 액션만 구독.
+// 이 컴포넌트는 로그인 폼일 뿐 user 값 자체를 화면에 쓸 일이 없으므로, login만 선택한다.
 function LoginPage() {
-  const { login } = useAuth()
+  const login = useAuthStore((state) => state.login)
   const navigate = useNavigate()
   const location = useLocation()
 

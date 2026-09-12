@@ -1,9 +1,9 @@
 import { useNavigate } from 'react-router-dom'
-import { useAuth } from '../context/AuthContext.jsx'
+import { useAuthStore } from '../store/authStore.js'
 
-// study8: Context에서 꺼낸 user 정보를 화면에 표시.
 function MyPage() {
-  const { user, logout } = useAuth()
+  const user = useAuthStore((state) => state.user)
+  const logout = useAuthStore((state) => state.logout)
   const navigate = useNavigate()
 
   function handleLogout() {
