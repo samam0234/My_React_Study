@@ -3,6 +3,8 @@ import './App.css'
 import FruitListPractice from './components/FruitListPractice.jsx'
 import FruitInventoryPractice from './components/FruitInventoryPractice.jsx'
 import FruitSearchPractice from './components/FruitSearchPractice.jsx'
+import LikeableFruitList from './components/LikeableFruitList.jsx'
+import LoginFormPractice from './components/LoginFormPractice.jsx'
 
 function App() {
   const [showSearch, setShowSearch] = useState(true)
@@ -26,6 +28,9 @@ function App() {
         {/* 버튼으로 마운트/언마운트를 반복시켜 useEffect의 클린업 함수 호출을
             콘솔에서 확인할 수 있게 함 */}
         {showSearch && <FruitSearchPractice />}
+
+        <LikeableFruitList />
+        <LoginFormPractice />
       </main>
     </div>
   )
