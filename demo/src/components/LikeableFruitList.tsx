@@ -1,16 +1,25 @@
-import { useState } from 'react'
+import { useState, type MouseEvent } from 'react'
 
-const fruits = [
+interface SimpleFruit {
+  id: number
+  name: string
+}
+
+const fruits: SimpleFruit[] = [
   { id: 1, name: '사과' },
   { id: 2, name: '바나나' },
   { id: 3, name: '포도' },
 ]
 
-// 자식(FruitLikeCard)이 부모(LikeableFruitList)에게 "좋아요 눌림"을 알리는 실습.
-// Vue의 emit('like', payload)에 대응하는 자리를, React에서는 "콜백 함수를 props로 내려주는" 방식으로 구현.
-function FruitLikeCard({ fruit, liked, onSelect, onToggleLike }) {
-  function handleLikeClick(event) {
-    // 카드 전체 클릭(onSelect)까지 같이 발생하지 않도록 이벤트 전파를 막음
+interface FruitLikeCardProps {
+  fruit: SimpleFruit
+  liked: boolean
+  onSelect: (id: number) => void
+  onToggleLike: (id: number) => void
+}
+
+function FruitLikeCard({ fruit, liked, onSelect, onToggleLike }: FruitLikeCardProps) {
+  function handleLikeClick(event: MouseEvent<HTMLButtonElement>) {
     event.stopPropagation()
     onToggleLike(fruit.id)
   }
@@ -26,17 +35,16 @@ function FruitLikeCard({ fruit, liked, onSelect, onToggleLike }) {
 }
 
 function LikeableFruitList() {
-  const [likedIds, setLikedIds] = useState([])
-  const [lastSelected, setLastSelected] = useState(null)
+  const [likedIds, setLikedIds] = useState<number[]>([])
+  const [lastSelected, setLastSelected] = useState<number | null>(null)
 
-  // 자식으로부터 "id"만 전달받고, 실제 상태 변경(무엇을 어떻게 바꿀지)은 전부 부모가 결정한다
-  function handleToggleLike(id) {
+  function handleToggleLike(id: number) {
     setLikedIds((prev) =>
       prev.includes(id) ? prev.filter((likedId) => likedId !== id) : [...prev, id],
     )
   }
 
-  function handleSelect(id) {
+  function handleSelect(id: number) {
     setLastSelected(id)
   }
 

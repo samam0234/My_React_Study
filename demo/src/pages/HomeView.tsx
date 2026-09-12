@@ -1,12 +1,10 @@
 import { useState } from 'react'
-import FruitListPractice from '../components/FruitListPractice.jsx'
-import FruitInventoryPractice from '../components/FruitInventoryPractice.jsx'
-import FruitSearchPractice from '../components/FruitSearchPractice.jsx'
-import LikeableFruitList from '../components/LikeableFruitList.jsx'
-import LoginFormPractice from '../components/LoginFormPractice.jsx'
+import FruitListPractice from '../components/FruitListPractice.tsx'
+import FruitInventoryPractice from '../components/FruitInventoryPractice.tsx'
+import FruitSearchPractice from '../components/FruitSearchPractice.tsx'
+import LikeableFruitList from '../components/LikeableFruitList.tsx'
+import LoginFormPractice from '../components/LoginFormPractice.tsx'
 
-// study1~4에서 쌓아온 실습 컴포넌트들을 모아둔 홈 페이지.
-// study5부터는 라우팅이 생겨서 App.jsx가 "여러 페이지 중 하나"로 이 컴포넌트를 보여줌.
 function HomeView() {
   const [showSearch, setShowSearch] = useState(true)
 

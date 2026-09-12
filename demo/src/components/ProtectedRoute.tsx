@@ -1,8 +1,12 @@
+import type { ReactNode } from 'react'
 import { Navigate, useLocation } from 'react-router-dom'
-import { useAuthStore } from '../store/authStore.js'
+import { useAuthStore } from '../store/authStore.ts'
 
-// study9: study8의 useAuth() 대신 Zustand 셀렉터로 필요한 값(user)만 구독.
-function ProtectedRoute({ children }) {
+interface ProtectedRouteProps {
+  children: ReactNode
+}
+
+function ProtectedRoute({ children }: ProtectedRouteProps) {
   const user = useAuthStore((state) => state.user)
   const location = useLocation()
 

@@ -1,20 +1,18 @@
 import { useState } from 'react'
-import { useFetch } from '../hooks/useFetch.js'
-import { fetchPosts } from '../api/posts.js'
+import { useFetch } from '../hooks/useFetch.ts'
+import { fetchPosts, type Post } from '../api/posts.ts'
 
 const LIMIT = 5
 
-// study7: axios + 커스텀 훅(useFetch) + 페이지네이션 + 로딩/에러/빈 상태를 한 화면에서 실습.
 function PostListPage() {
   const [page, setPage] = useState(1)
   const [reloadKey, setReloadKey] = useState(0)
 
-  const { data: posts, loading, error } = useFetch(
+  const { data: posts, loading, error } = useFetch<Post[]>(
     () => fetchPosts({ page, limit: LIMIT }),
     [page, reloadKey],
   )
 
-  // 로딩 상태 — 화면에 반드시 명시 (study0 7장)
   if (loading) {
     return (
       <section className="practice">
@@ -24,7 +22,6 @@ function PostListPage() {
     )
   }
 
-  // 에러 상태 — 무엇이 잘못됐는지, 재시도 방법까지 안내
   if (error) {
     return (
       <section className="practice">
@@ -37,7 +34,6 @@ function PostListPage() {
     )
   }
 
-  // 빈 상태 — 데이터는 왔지만 항목이 0개인 경우
   if (!posts || posts.length === 0) {
     return (
       <section className="practice">
@@ -62,7 +58,6 @@ function PostListPage() {
           ← 이전
         </button>
         <span>{page} 페이지</span>
-        {/* JSONPlaceholder는 전체 개수를 안 알려주므로, 받아온 개수가 LIMIT보다 적으면 마지막 페이지로 간주 */}
         <button
           disabled={posts.length < LIMIT}
           onClick={() => setPage((p) => p + 1)}

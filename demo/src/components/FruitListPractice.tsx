@@ -1,8 +1,7 @@
-import FruitCard from './FruitCard.jsx'
+import FruitCard from './FruitCard.tsx'
+import type { StockFruit } from '../types.ts'
 
-// study1: 아직 상태(state)는 다루지 않고, 그냥 고정된 배열을 props로 내려주는 것까지만 실습합니다.
-// (interactive하게 만드는 건 study2에서 useState로 이어집니다.)
-const initialFruits = [
+const initialFruits: StockFruit[] = [
   { id: 1, name: '사과', inStock: true },
   { id: 2, name: '바나나', inStock: false },
   { id: 3, name: '포도', inStock: true },

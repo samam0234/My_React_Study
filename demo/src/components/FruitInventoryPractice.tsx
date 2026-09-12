@@ -1,26 +1,25 @@
 import { useState } from 'react'
+import type { StockFruit } from '../types.ts'
 
 const fruitPool = ['사과', '바나나', '포도', '수박', '딸기', '망고']
 let nextId = 4
 
-const initialFruits = [
+const initialFruits: StockFruit[] = [
   { id: 1, name: '사과', inStock: true },
   { id: 2, name: '바나나', inStock: false },
   { id: 3, name: '포도', inStock: true },
 ]
 
-// study2: study1의 정적 목록을 useState로 "진짜 상태"로 바꾼 버전.
 function FruitInventoryPractice() {
-  const [fruits, setFruits] = useState(initialFruits)
+  const [fruits, setFruits] = useState<StockFruit[]>(initialFruits)
   const [showOnlyInStock, setShowOnlyInStock] = useState(false)
 
   function addRandomFruit() {
     const name = fruitPool[Math.floor(Math.random() * fruitPool.length)]
-    // 배열 상태는 직접 push 하지 않고, "새 배열"을 만들어 setState에 넘긴다 (불변성)
     setFruits((prev) => [...prev, { id: nextId++, name, inStock: true }])
   }
 
-  function toggleStock(id) {
+  function toggleStock(id: number) {
     setFruits((prev) =>
       prev.map((fruit) =>
         fruit.id === id ? { ...fruit, inStock: !fruit.inStock } : fruit,
@@ -28,7 +27,7 @@ function FruitInventoryPractice() {
     )
   }
 
-  function removeFruit(id) {
+  function removeFruit(id: number) {
     setFruits((prev) => prev.filter((fruit) => fruit.id !== id))
   }
 

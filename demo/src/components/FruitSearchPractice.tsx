@@ -2,35 +2,29 @@ import { useEffect, useRef, useState } from 'react'
 
 const allFruits = ['사과', '바나나', '포도', '수박', '딸기', '망고', '체리', '자두']
 
-// study3: useEffect(마운트/언마운트/의존성 배열)와 useRef(DOM 참조, 렌더와 무관한 값)를 실습.
 function FruitSearchPractice() {
   const [keyword, setKeyword] = useState('')
   const [debouncedKeyword, setDebouncedKeyword] = useState('')
-  const inputRef = useRef(null)
+  const inputRef = useRef<HTMLInputElement>(null)
   const renderCount = useRef(0)
 
-  // 마운트 시 1번만 실행 (의존성 배열이 빈 배열 [])
   useEffect(() => {
     console.log('[FruitSearchPractice] 마운트됨 → input에 자동 포커스')
-    inputRef.current.focus()
+    inputRef.current?.focus()
 
-    // 클린업 함수: 이 컴포넌트가 화면에서 사라질 때(언마운트) 실행됨
     return () => {
       console.log('[FruitSearchPractice] 언마운트됨')
     }
   }, [])
 
-  // keyword가 바뀔 때마다 실행 (디바운스: 타이핑이 멈추고 300ms 후에만 검색 반영)
   useEffect(() => {
     const timer = setTimeout(() => {
       setDebouncedKeyword(keyword)
     }, 300)
 
-    // keyword가 다시 바뀌어 effect가 재실행되기 직전에, 이전 타이머를 취소
     return () => clearTimeout(timer)
   }, [keyword])
 
-  // 렌더링마다 실행되지만, state가 아니라 ref라서 값이 바뀌어도 리렌더링을 유발하지 않음
   renderCount.current += 1
 
   const results = allFruits.filter((fruit) => fruit.includes(debouncedKeyword))

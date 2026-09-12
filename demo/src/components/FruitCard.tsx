@@ -1,7 +1,11 @@
-import FruitBadge from './FruitBadge.jsx'
+import FruitBadge from './FruitBadge.tsx'
+import type { StockFruit } from '../types.ts'
 
-// props 실습: 부모(FruitListPractice)가 내려준 fruit 객체 하나를 그려주기만 하는 자식 컴포넌트
-function FruitCard({ fruit }) {
+interface FruitCardProps {
+  fruit: StockFruit
+}
+
+function FruitCard({ fruit }: FruitCardProps) {
   return (
     <li className="fruit-card">
       <span className={`name${fruit.inStock ? '' : ' soldout'}`}>

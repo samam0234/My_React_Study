@@ -1,5 +1,5 @@
 import { useNavigate } from 'react-router-dom'
-import { useAuthStore } from '../store/authStore.js'
+import { useAuthStore } from '../store/authStore.ts'
 
 function MyPage() {
   const user = useAuthStore((state) => state.user)
@@ -10,6 +10,10 @@ function MyPage() {
     logout()
     navigate('/', { replace: true })
   }
+
+  // ProtectedRoute를 거쳐야만 이 화면에 도달하므로 user는 항상 존재하지만,
+  // 타입 상으로는 User | null이므로 방어적으로 한 번 더 확인한다.
+  if (!user) return null
 
   return (
     <section className="practice">

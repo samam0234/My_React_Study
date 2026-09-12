@@ -1,7 +1,14 @@
-import { useState } from 'react'
+import { useState, type ChangeEvent, type FocusEvent, type FormEvent } from 'react'
 
-function validate({ email, password }) {
-  const errors = {}
+interface LoginForm {
+  email: string
+  password: string
+}
+
+type FormErrors = Partial<Record<keyof LoginForm, string>>
+
+function validate({ email, password }: LoginForm): FormErrors {
+  const errors: FormErrors = {}
   if (!email.includes('@')) {
     errors.email = '올바른 이메일 형식이 아닙니다.'
   }
@@ -11,30 +18,27 @@ function validate({ email, password }) {
   return errors
 }
 
-// study4-2: Controlled Component 실습. input의 value와 상태를 직접 연결하고,
-// 클라이언트 사이드 검증(제출 시 + 필드를 벗어났을 때)을 적용.
 function LoginFormPractice() {
-  const [form, setForm] = useState({ email: '', password: '' })
-  const [touched, setTouched] = useState({})
+  const [form, setForm] = useState<LoginForm>({ email: '', password: '' })
+  const [touched, setTouched] = useState<Partial<Record<keyof LoginForm, boolean>>>({})
   const [submitted, setSubmitted] = useState(false)
-  const [loggedInEmail, setLoggedInEmail] = useState(null)
+  const [loggedInEmail, setLoggedInEmail] = useState<string | null>(null)
 
   const errors = validate(form)
   const isValid = Object.keys(errors).length === 0
 
-  function handleChange(event) {
+  function handleChange(event: ChangeEvent<HTMLInputElement>) {
     const { name, value } = event.target
-    // 객체 상태도 스프레드로 새 객체를 만들어 업데이트 (study2에서 배운 불변성 패턴)
     setForm((prev) => ({ ...prev, [name]: value }))
   }
 
-  function handleBlur(event) {
+  function handleBlur(event: FocusEvent<HTMLInputElement>) {
     const { name } = event.target
     setTouched((prev) => ({ ...prev, [name]: true }))
   }
 
-  function handleSubmit(event) {
-    event.preventDefault() // 브라우저 기본 폼 제출(새로고침) 막기
+  function handleSubmit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault()
     setSubmitted(true)
     if (!isValid) return
 
@@ -44,7 +48,7 @@ function LoginFormPractice() {
     setSubmitted(false)
   }
 
-  function shouldShowError(field) {
+  function shouldShowError(field: keyof LoginForm) {
     return (touched[field] || submitted) && errors[field]
   }
 

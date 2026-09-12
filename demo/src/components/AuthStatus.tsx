@@ -1,8 +1,6 @@
 import { useRef } from 'react'
-import { useAuthStore } from '../store/authStore.js'
+import { useAuthStore } from '../store/authStore.ts'
 
-// study9: Provider 없이, 스토어에서 필요한 값(user)만 선택적으로 구독.
-// renderCount로 "이 컴포넌트가 실제로 몇 번 리렌더링되는지" 눈으로 확인한다.
 function AuthStatus() {
   const user = useAuthStore((state) => state.user)
   const renderCount = useRef(0)

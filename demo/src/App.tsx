@@ -1,19 +1,18 @@
 import { BrowserRouter, Routes, Route, Link } from 'react-router-dom'
 import './App.css'
-import AuthStatus from './components/AuthStatus.jsx'
-import HomeView from './pages/HomeView.jsx'
-import FruitCatalogPage from './pages/FruitCatalogPage.jsx'
-import FruitDetailLayout from './pages/FruitDetailLayout.jsx'
-import FruitOverview from './pages/FruitOverview.jsx'
-import FruitReviews from './pages/FruitReviews.jsx'
-import LoginPage from './pages/LoginPage.jsx'
-import MyPage from './pages/MyPage.jsx'
-import PostListPage from './pages/PostListPage.jsx'
-import ProtectedRoute from './components/ProtectedRoute.jsx'
+import AuthStatus from './components/AuthStatus.tsx'
+import HomeView from './pages/HomeView.tsx'
+import FruitCatalogPage from './pages/FruitCatalogPage.tsx'
+import FruitDetailLayout from './pages/FruitDetailLayout.tsx'
+import FruitOverview from './pages/FruitOverview.tsx'
+import FruitReviews from './pages/FruitReviews.tsx'
+import LoginPage from './pages/LoginPage.tsx'
+import MyPage from './pages/MyPage.tsx'
+import PostListPage from './pages/PostListPage.tsx'
+import ProtectedRoute from './components/ProtectedRoute.tsx'
 
 function App() {
   return (
-    // study9: Zustand 스토어는 Provider로 감쌀 필요 없이 어디서든 import해서 바로 씀
     <BrowserRouter>
       <div className="app">
         <header>
@@ -34,7 +33,6 @@ function App() {
             <Route path="/" element={<HomeView />} />
             <Route path="/fruits" element={<FruitCatalogPage />} />
 
-            {/* 중첩 라우팅: FruitDetailLayout 아래에 index / reviews 두 자식 라우트 */}
             <Route path="/fruits/:id" element={<FruitDetailLayout />}>
               <Route index element={<FruitOverview />} />
               <Route path="reviews" element={<FruitReviews />} />

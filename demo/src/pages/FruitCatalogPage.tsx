@@ -1,7 +1,6 @@
 import { Link } from 'react-router-dom'
-import { fruitCatalog } from '../data/fruitCatalog.js'
+import { fruitCatalog } from '../data/fruitCatalog.ts'
 
-// study5: 목록 페이지. 각 항목을 상세 페이지 경로로 연결.
 function FruitCatalogPage() {
   return (
     <section className="practice">
