@@ -1,8 +1,12 @@
+import { useState } from 'react'
 import './App.css'
 import FruitListPractice from './components/FruitListPractice.jsx'
 import FruitInventoryPractice from './components/FruitInventoryPractice.jsx'
+import FruitSearchPractice from './components/FruitSearchPractice.jsx'
 
 function App() {
+  const [showSearch, setShowSearch] = useState(true)
+
   return (
     <div className="app">
       <header>
@@ -13,6 +17,15 @@ function App() {
       <main>
         <FruitListPractice />
         <FruitInventoryPractice />
+
+        <div className="actions">
+          <button onClick={() => setShowSearch((prev) => !prev)}>
+            {showSearch ? '검색 컴포넌트 언마운트' : '검색 컴포넌트 다시 마운트'}
+          </button>
+        </div>
+        {/* 버튼으로 마운트/언마운트를 반복시켜 useEffect의 클린업 함수 호출을
+            콘솔에서 확인할 수 있게 함 */}
+        {showSearch && <FruitSearchPractice />}
       </main>
     </div>
   )
