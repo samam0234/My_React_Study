@@ -90,6 +90,12 @@ nav.actions a:hover {
   color: var(--accent);
 }
 
+nav.actions a.active {
+  border-color: var(--accent);
+  color: var(--accent);
+  background: var(--accent-bg);
+}
+
 button {
   font: inherit;
   cursor: pointer;
