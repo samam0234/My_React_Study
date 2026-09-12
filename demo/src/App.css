@@ -72,6 +72,24 @@ section.practice h2 {
   margin-bottom: 8px;
 }
 
+nav.actions {
+  justify-content: center;
+  margin-bottom: 0;
+}
+
+nav.actions a {
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 6px 14px;
+  text-decoration: none;
+  color: var(--text-h);
+}
+
+nav.actions a:hover {
+  border-color: var(--accent-border);
+  color: var(--accent);
+}
+
 button {
   font: inherit;
   cursor: pointer;
