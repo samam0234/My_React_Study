@@ -1,16 +1,16 @@
 import { useLocation, useNavigate } from 'react-router-dom'
-import { login } from '../auth/fakeAuth.js'
+import { useAuth } from '../context/AuthContext.jsx'
 
-// study6: 실제 서버 인증 없이, 버튼 클릭만으로 "로그인됨" 상태를 만드는 목업 로그인 페이지.
+// study8: fakeAuth.login() 대신 Context의 login()을 사용. 사용자 정보(user 객체)까지 저장.
 function LoginPage() {
+  const { login } = useAuth()
   const navigate = useNavigate()
   const location = useLocation()
 
-  // ProtectedRoute가 넘겨준 "원래 가려던 경로" (없으면 /mypage로 기본값)
   const from = location.state?.from?.pathname || '/mypage'
 
   function handleLogin() {
-    login()
+    login({ name: '테스트유저', email: 'test@example.com' })
     navigate(from, { replace: true })
   }
 
