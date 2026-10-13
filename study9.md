@@ -130,7 +130,11 @@ study8과 동일한 시나리오로 동작이 똑같은지 확인합니다 (기�
 
 `npm run build`까지 에러 없이 되는 것을 확인했습니다.
 
-## 8. 다음 단계 (study10 예정 — 고급 기술 구현 5)
+## 8. 다음 단계
+
+JSX 기초(`JSX_study/demo`)를 마치면, 같은 확장자로 짧은 응용 프로젝트 [`JSX_study/project`](./JSX_study/project)를 봅니다. 목록, 상세, 검색, 로그인만 합친 미니 게시판입니다.
+
+그 다음이 study10입니다.
 
 - JS → TypeScript 전환 (`tsconfig`, `.tsx`, props/스토어 타입 정의). JSX 원본은 [`JSX_study/demo`](./JSX_study/demo)에 두고, 전환 결과는 [`TSX_study/demo`](./TSX_study/demo)에 따로 둡니다.
 - 기업형 폴더 구조(`features` 또는 `pages` + `components` + `hooks` + `api`) 정리

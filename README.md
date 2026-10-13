@@ -22,24 +22,29 @@ Vue.js 학습을 마친 뒤 React로 넘어오며 정리한 학습 저장소입�
 ## 학습 순서
 
 1. [study0.md](./study0.md) — 이론
-2. [study1.md](./study1.md) ~ [study9.md](./study9.md) — JSX 실습 ([`JSX_study/demo`](./JSX_study/demo), `.jsx` / `.js`)
-3. [study10.md](./study10.md) — 같은 실습을 TypeScript로 전환한 결과 ([`TSX_study/demo`](./TSX_study/demo), `.tsx` / `.ts`)
-4. [studyFinal.md](./studyFinal.md) — TSX 종합 프로젝트 ([`TSX_study/project`](./TSX_study/project))
+2. [study1.md](./study1.md) ~ [study9.md](./study9.md) — JSX 기초 실습 ([`JSX_study/demo`](./JSX_study/demo))
+3. JSX 응용 실습 — 가벼운 미니 게시판 ([`JSX_study/project`](./JSX_study/project))
+4. [study10.md](./study10.md) — 기초 실습을 TypeScript로 전환한 결과 ([`TSX_study/demo`](./TSX_study/demo))
+5. [studyFinal.md](./studyFinal.md) — TSX 응용 실습 ([`TSX_study/project`](./TSX_study/project))
 
 ## 프로젝트
 
-- [`JSX_study/demo`](./JSX_study/demo): study1~9. JavaScript + JSX로 쌓은 연습 프로젝트
-- [`TSX_study/demo`](./TSX_study/demo): study10. 위 JSX 실습을 TypeScript로 전환한 연습 프로젝트 (전환 결과만 두고, JSX 원본은 수정하지 않음)
-- [`TSX_study/project`](./TSX_study/project): studyFinal 종합 프로젝트 (React + TypeScript 미니 게시판)
+`demo`는 기초 실습, `project`는 응용 실습입니다. JSX 응용은 TSX 응용보다 짧습니다.
+
+- [`JSX_study/demo`](./JSX_study/demo): study1~9. JavaScript + JSX 기초 실습
+- [`JSX_study/project`](./JSX_study/project): JSX 응용. 목록, 상세, 검색, 로그인만 있는 미니 게시판
+- [`TSX_study/demo`](./TSX_study/demo): study10. 기초 실습을 TypeScript로 전환한 결과 (JSX 원본은 수정하지 않음)
+- [`TSX_study/project`](./TSX_study/project): studyFinal. TSX 응용 (페이지네이션, 즐겨찾기, 댓글, 보호된 마이페이지)
 
 ## 실행 방법
 
 Node.js 18 이상이 필요합니다.
 
 ```bash
-cd JSX_study/demo       # JSX 실습 (study1~9)
-# cd TSX_study/demo     # TSX 실습 (study10)
-# cd TSX_study/project  # 종합 프로젝트 (studyFinal)
+cd JSX_study/demo       # JSX 기초 (study1~9)
+# cd JSX_study/project  # JSX 응용
+# cd TSX_study/demo     # TSX 기초 (study10)
+# cd TSX_study/project  # TSX 응용 (studyFinal)
 npm install
 npm run dev             # 개발 서버 (기본 http://localhost:5173)
 npm run build

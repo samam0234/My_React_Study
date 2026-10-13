@@ -209,11 +209,12 @@ src/
 
 | 순서 | 문서 | 실습 폴더 | 확장자 |
 |---|---|---|---|
-| 1 | study1 ~ study9 | [`JSX_study/demo`](./JSX_study/demo) | `.jsx` / `.js` |
-| 2 | study10 | [`TSX_study/demo`](./TSX_study/demo) | `.tsx` / `.ts` |
-| 3 | studyFinal | [`TSX_study/project`](./TSX_study/project) | `.tsx` / `.ts` |
+| 1 | study1 ~ study9 | [`JSX_study/demo`](./JSX_study/demo) | 기초, `.jsx` / `.js` |
+| 2 | JSX 응용 | [`JSX_study/project`](./JSX_study/project) | 응용, `.jsx` / `.js` |
+| 3 | study10 | [`TSX_study/demo`](./TSX_study/demo) | 기초, `.tsx` / `.ts` |
+| 4 | studyFinal | [`TSX_study/project`](./TSX_study/project) | 응용, `.tsx` / `.ts` |
 
-`JSX_study/demo`는 study9까지 쌓인 JavaScript 실습입니다. study10의 TypeScript 전환본은 그 폴더를 덮어쓰지 않고 `TSX_study/demo`에 따로 두었습니다. 종합 프로젝트는 처음부터 TSX인 `TSX_study/project`입니다.
+`demo`는 개념을 하나씩 쌓는 기초 실습이고, `project`는 그 개념을 한 사이트로 합친 응용 실습입니다. JSX 응용(`JSX_study/project`)은 목록, 상세, 검색, 로그인만 있는 짧은 게시판입니다. 페이지네이션, 즐겨찾기, 댓글, 보호된 마이페이지는 TSX 응용(`TSX_study/project`)에서 다룹니다. study10의 TypeScript 전환본은 JSX 기초를 덮어쓰지 않고 `TSX_study/demo`에 따로 두었습니다.
 
 ---
 
