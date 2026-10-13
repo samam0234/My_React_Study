@@ -1,6 +1,6 @@
 # studyFinal — 종합 실습: 미니 게시판 웹사이트 (React + TypeScript)
 
-study0부터 study10까지 하나씩 익혔던 개념을 전부 합쳐서, `demo/`가 아닌 **새 프로젝트** [`project/`](./project)에 작지만 실제로 동작하는 웹사이트를 만들었습니다. [Vue.js 학습의 studyFinal](../vue.js/studyFinal.md)에서 만든 미니 게시판과 같은 소재(JSONPlaceholder)를 React + TypeScript로 재구현했습니다 (Notion 학습 목표의 예제 1번).
+study0부터 study10까지 하나씩 익혔던 개념을 전부 합쳐서, 연습 프로젝트(`JSX_study/demo`, `TSX_study/demo`)가 아닌 **새 프로젝트** [`TSX_study/project`](./TSX_study/project)에 작지만 실제로 동작하는 웹사이트를 만들었습니다. [Vue.js 학습의 studyFinal](../vue.js/studyFinal.md)에서 만든 미니 게시판과 같은 소재(JSONPlaceholder)를 React + TypeScript로 재구현했습니다 (Notion 학습 목표의 예제 1번).
 
 ```
 - [x] Vite + React + TS 프로젝트 생성                 (처음부터 TS로 시작 — study1/study10)
@@ -17,13 +17,13 @@ study0부터 study10까지 하나씩 익혔던 개념을 전부 합쳐서, `demo
 
 ---
 
-## 1. 왜 `demo/`가 아니라 `project/`를 새로 만들었나
+## 1. 왜 연습 프로젝트가 아니라 `TSX_study/project`를 새로 만들었나
 
-`demo/`는 각 개념을 **하나씩 떼어놓고** 실습하기 위해 한 화면에 실습 컴포넌트를 계속 쌓아온 "연습장"이었습니다. `studyFinal`의 목적은 "이 개념들을 실제 서비스에서 어떻게 **조합**해서 쓰는지" 감을 잡는 것이므로, 처음부터 하나의 완결된 웹사이트 구조로 새로 설계했습니다. 또한 study10에서 배운 대로 **처음부터 TypeScript(`--template react-ts`)로 생성**해서, "JS로 만들고 나중에 전환"이 아니라 "새 프로젝트는 처음부터 TS로 시작"하는 실무에 더 흔한 흐름도 함께 실습했습니다.
+`JSX_study/demo`와 `TSX_study/demo`는 각 개념을 **하나씩 떼어놓고** 실습하기 위해 한 화면에 실습 컴포넌트를 계속 쌓아온 "연습장"입니다. `studyFinal`의 목적은 "이 개념들을 실제 서비스에서 어떻게 **조합**해서 쓰는지" 감을 잡는 것이므로, 처음부터 하나의 완결된 웹사이트 구조로 새로 설계했습니다. 또한 study10에서 배운 대로 **처음부터 TypeScript(`--template react-ts`)로 생성**해서, "JS로 만들고 나중에 전환"이 아니라 "새 프로젝트는 처음부터 TSX로 시작"하는 실무에 더 흔한 흐름도 함께 실습했습니다.
 
 ```bash
-npm create vite@latest project -- --template react-ts
-cd project
+npm create vite@latest TSX_study/project -- --template react-ts
+cd TSX_study/project
 npm install react-router-dom axios zustand
 ```
 
@@ -45,7 +45,7 @@ JSONPlaceholder(study7에서 쓴 그 API)의 게시글/댓글 데이터를 이�
 ## 3. 프로젝트 구조
 
 ```
-project/
+TSX_study/project/
 ├─ tsconfig.json / tsconfig.app.json / tsconfig.node.json
 ├─ src/
 │  ├─ main.tsx
@@ -71,7 +71,7 @@ project/
 │     └─ MyPage.tsx                # '/mypage' (보호됨)
 ```
 
-study0 7장에서 예고했던 `api/` + `components/` + `hooks/` + `pages/` + `store/` 구조가 그대로 적용되었습니다. `demo/`의 `data/`(목업 데이터)는 이번엔 전부 실제 API 응답으로 대체되어서 필요 없어졌습니다.
+study0 7장에서 예고했던 `api/` + `components/` + `hooks/` + `pages/` + `store/` 구조가 그대로 적용되었습니다. 연습 프로젝트의 `data/`(목업 데이터)는 이번엔 전부 실제 API 응답으로 대체되어서 필요 없어졌습니다.
 
 ## 4. 핵심 흐름 하나씩 짚어보기
 
@@ -219,7 +219,7 @@ function MyPage() {
 ## 5. 실행 방법
 
 ```bash
-cd project
+cd TSX_study/project
 npm install
 npm run build   # tsc -b && vite build — 타입 에러 없이 통과하는지 먼저 확인
 npm run dev

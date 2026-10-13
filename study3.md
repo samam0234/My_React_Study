@@ -13,7 +13,7 @@
 - [ ] 백엔드와 CORS 연동
 ```
 
-대응하는 실습 프로젝트: [`demo/`](./demo) — `FruitSearchPractice.jsx` 추가
+대응하는 실습 프로젝트: [`JSX_study/demo`](./JSX_study/demo) — `FruitSearchPractice.jsx` 추가
 
 ---
 
@@ -135,7 +135,7 @@ const [showSearch, setShowSearch] = useState(true)
 ## 4. 실행 확인
 
 ```bash
-cd demo
+cd JSX_study/demo
 npm run dev
 ```
 

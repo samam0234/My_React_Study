@@ -13,7 +13,7 @@ study6에서 `localStorage` + 함수 3개(`isLoggedIn`, `login`, `logout`)로 �
 - [ ] 백엔드와 CORS 연동
 ```
 
-대응하는 실습 프로젝트: [`demo/`](./demo)
+대응하는 실습 프로젝트: [`JSX_study/demo`](./JSX_study/demo)
 
 ---
 
@@ -158,7 +158,7 @@ function AuthStatus() {
 ## 6. 실행 확인
 
 ```bash
-cd demo
+cd JSX_study/demo
 npm run dev
 ```
 

@@ -13,22 +13,24 @@ study0에서 이론을 훑었으니, 실제로 프로젝트를 만들고 화면�
 - [ ] 백엔드와 CORS 연동
 ```
 
-대응하는 실습 프로젝트: [`demo/`](./demo)
+대응하는 실습 프로젝트: [`JSX_study/demo`](./JSX_study/demo)
+
+이 문서부터 study9까지는 **JSX(`.jsx`) 실습**입니다. TypeScript 전환본은 study10의 [`TSX_study/demo`](./TSX_study/demo)에서 이어서 봅니다. JSX 원본은 그때도 이 폴더에 그대로 둡니다.
 
 ---
 
 ## 1. 프로젝트 생성 명령어
 
 ```bash
-npm create vite@latest demo -- --template react
-cd demo
+npm create vite@latest JSX_study/demo -- --template react
+cd JSX_study/demo
 npm install
 npm run dev
 ```
 
 - `npm create vite@latest`: Vite 공식 스캐폴딩 CLI (Vue 때와 완전히 동일한 도구)
 - `-- --template react`: 여러 템플릿 중 **React + JS** 조합을 선택 (TypeScript를 쓰려면 `react-ts`, study10에서 다룸)
-- 결과적으로 `npx create-vite`가 실행되어 `demo/` 폴더에 프로젝트가 생성됩니다
+- 결과적으로 `npx create-vite`가 실행되어 `JSX_study/demo/` 폴더에 프로젝트가 생성됩니다
 
 ```bash
 npm run dev   # 개발 서버 실행, 기본 http://localhost:5173
@@ -38,7 +40,7 @@ npm run build # 프로덕션 빌드 (dist/ 생성)
 ## 2. 생성된 폴더 구조 (핵심만)
 
 ```
-demo/
+JSX_study/demo/
 ├─ index.html          # 진짜 진입점. <div id="root"></div> 하나만 있음
 ├─ vite.config.js
 ├─ package.json
@@ -74,7 +76,7 @@ createRoot(document.getElementById('root')).render(
 
 study0에서 배운 개념을 실제 코드로 확인하기 위해 "과일 재고 목록"을 3개의 컴포넌트로 나눠서 만들었습니다 (Vue study1의 과일 목록 실습과 동일한 소재로 비교하기 쉽게 구성).
 
-파일: [`demo/src/components/`](./demo/src/components)
+파일: [`JSX_study/demo/src/components/`](./JSX_study/demo/src/components)
 
 ### 3.1 `FruitListPractice.jsx` — 부모 컴포넌트
 
@@ -164,7 +166,7 @@ App
 ## 4. 실행 확인
 
 ```bash
-cd demo
+cd JSX_study/demo
 npm run dev
 ```
 

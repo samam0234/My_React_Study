@@ -13,7 +13,7 @@ study8의 로그인 기능을 이번엔 **Zustand**로 다시 구현합니다. �
 - [ ] 백엔드와 CORS 연동
 ```
 
-대응하는 실습 프로젝트: [`demo/`](./demo) — `context/AuthContext.jsx` 삭제, `store/authStore.js`로 교체
+대응하는 실습 프로젝트: [`JSX_study/demo`](./JSX_study/demo) — `context/AuthContext.jsx` 삭제, `store/authStore.js`로 교체
 
 ---
 
@@ -118,7 +118,7 @@ function AuthStatus() {
 ## 7. 실행 확인
 
 ```bash
-cd demo
+cd JSX_study/demo
 npm run dev
 ```
 
@@ -132,6 +132,6 @@ study8과 동일한 시나리오로 동작이 똑같은지 확인합니다 (기�
 
 ## 8. 다음 단계 (study10 예정 — 고급 기술 구현 5)
 
-- JS → TypeScript 전환 (`tsconfig`, `.tsx`, props/스토어 타입 정의)
+- JS → TypeScript 전환 (`tsconfig`, `.tsx`, props/스토어 타입 정의). JSX 원본은 [`JSX_study/demo`](./JSX_study/demo)에 두고, 전환 결과는 [`TSX_study/demo`](./TSX_study/demo)에 따로 둡니다.
 - 기업형 폴더 구조(`features` 또는 `pages` + `components` + `hooks` + `api`) 정리
 - 백엔드와의 CORS 연동 개념

@@ -5,15 +5,16 @@
 
 ## 1. 저장소 개요
 
-- Vue 3(+ Vite) 학습 기록 저장소입니다.
+- React(Vite) 학습 기록 저장소입니다. 순서는 이론 → JSX 실습 → TSX 실습입니다.
 - `study0.md`, `study1.md`, `study2.md`, ... 순서로 학습 진도가 진행됩니다. (숫자가 클수록 최신 진도)
-- `demo/`: study0~study7 문서 내용을 개념별로 하나씩 실습하는 Vue 3 + Vite 프로젝트입니다. 실습 컴포넌트들이 홈 화면 한 페이지에 계속 누적되는 구조입니다.
-- `project/`: `studyFinal.md`에 대응하는, `demo/`에서 익힌 개념을 전부 합쳐 만든 완결된 미니 웹사이트(별도 Vue 3 + Vite 프로젝트)입니다.
+- `JSX_study/demo/`: study1~study9. JavaScript + JSX(`.jsx`)로 개념을 하나씩 쌓는 연습 프로젝트입니다.
+- `TSX_study/demo/`: study10. 위 JSX 실습을 TypeScript(`.tsx`)로 전환한 결과입니다. JSX 원본은 덮어쓰지 않습니다.
+- `TSX_study/project/`: `studyFinal.md`에 대응하는, 연습 프로젝트에서 익힌 개념을 합쳐 만든 TSX 미니 게시판입니다.
 
 ## 2. 작업 전 확인 사항
 
 - 새 작업을 시작하기 전에 `studyN.md` 파일들을 번호 순서대로 확인하여 지금까지의 학습 진도와 맥락을 파악합니다.
-- `demo/` 프로젝트 코드가 study 문서 설명과 어긋나지 않는지 확인합니다.
+- 실습 코드가 study 문서 설명과 어긋나지 않는지 확인합니다. study1~9는 `JSX_study/demo`, study10은 `TSX_study/demo`, studyFinal은 `TSX_study/project`입니다.
 - 새 studyN.md 문서를 추가/수정할 때는 이전 study 문서와 이어지는 흐름을 유지합니다.
 
 ## 3. 커밋 규칙

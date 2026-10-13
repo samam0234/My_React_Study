@@ -13,7 +13,7 @@
 - [ ] 백엔드와 CORS 연동
 ```
 
-대응하는 실습 프로젝트: [`demo/`](./demo)
+대응하는 실습 프로젝트: [`JSX_study/demo`](./JSX_study/demo)
 
 ---
 
@@ -39,7 +39,7 @@ npm install axios
 study0 7장에서 예고한 `api/` 폴더를 실제로 만들었습니다.
 
 ```
-demo/src/api/
+JSX_study/demo/src/api/
 ├─ client.js   # axios 인스턴스 (baseURL, timeout 등 공통 설정)
 └─ posts.js    # 엔드포인트별 함수
 ```
@@ -160,7 +160,7 @@ const { data: posts, loading, error } = useFetch(
 ## 6. 실행 확인
 
 ```bash
-cd demo
+cd JSX_study/demo
 npm run dev
 ```
 

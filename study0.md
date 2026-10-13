@@ -200,10 +200,20 @@ src/
 | study7 (고급2) | axios/fetch API 연동, 커스텀 훅으로 추상화, 로딩/에러/빈 상태 |
 | study8 (고급3) | Context API로 전역 로그인 상태 관리 |
 | study9 (고급4) | Zustand로 전역 상태 관리 (Context와 비교) |
-| study10 (고급5) | JS → TypeScript 전환, 기업형 폴더 구조, CORS 연동 |
-| studyFinal | 지금까지 배운 것을 합쳐 미니 게시판 웹사이트 제작 |
+| study10 (고급5) | JSX 실습을 TypeScript(TSX)로 전환, 기업형 폴더 구조, CORS 연동 |
+| studyFinal | 지금까지 배운 것을 합쳐 TSX 미니 게시판 웹사이트 제작 |
 
 각 단계는 이전 단계 위에 쌓이는 구조이므로 순서를 크게 건너뛰지 않는 걸 권장합니다.
+
+실습 코드는 확장자별로 폴더를 나눕니다. **먼저 JSX를 끝내고, 그 다음 TSX로 넘어갑니다.**
+
+| 순서 | 문서 | 실습 폴더 | 확장자 |
+|---|---|---|---|
+| 1 | study1 ~ study9 | [`JSX_study/demo`](./JSX_study/demo) | `.jsx` / `.js` |
+| 2 | study10 | [`TSX_study/demo`](./TSX_study/demo) | `.tsx` / `.ts` |
+| 3 | studyFinal | [`TSX_study/project`](./TSX_study/project) | `.tsx` / `.ts` |
+
+`JSX_study/demo`는 study9까지 쌓인 JavaScript 실습입니다. study10의 TypeScript 전환본은 그 폴더를 덮어쓰지 않고 `TSX_study/demo`에 따로 두었습니다. 종합 프로젝트는 처음부터 TSX인 `TSX_study/project`입니다.
 
 ---
 

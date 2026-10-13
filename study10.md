@@ -1,6 +1,6 @@
 # study10 (고급 기술 구현 5) — TypeScript 전환, 기업형 폴더 구조, CORS 연동
 
-마지막 "고급" 단계입니다. 지금까지 JS로 만들어온 `demo/` 전체를 TypeScript로 전환하고, 지금까지 자연스럽게 쌓여온 폴더 구조를 "기업형 구조"로 정리한 뒤, 실제 백엔드와 연동할 때 반드시 마주치는 **CORS** 개념을 정리합니다.
+마지막 "고급" 단계입니다. study1~9에서 만든 JSX 실습([`JSX_study/demo`](./JSX_study/demo))은 그대로 두고, 그 프로젝트를 TypeScript로 전환한 결과를 [`TSX_study/demo`](./TSX_study/demo)에 따로 둡니다. 이어서 지금까지 쌓인 폴더 구조를 "기업형 구조"로 정리하고, 실제 백엔드와 연동할 때 반드시 마주치는 **CORS** 개념을 정리합니다.
 
 ```
 - [x] Vite + React + JS 후 TS로 전환                   (이번 문서 — 체크리스트 완전히 완료!)
@@ -13,7 +13,7 @@
 - [x] 백엔드(Django/FastAPI/Nest/Spring) 와 CORS 연동    (개념 정리 — 실제 백엔드는 studyFinal에서 목업으로 대체)
 ```
 
-대응하는 실습 프로젝트: [`demo/`](./demo) — 모든 `.jsx`/`.js` 파일을 `.tsx`/`.ts`로 전환
+대응하는 실습 프로젝트: [`TSX_study/demo`](./TSX_study/demo) — [`JSX_study/demo`](./JSX_study/demo)의 `.jsx`/`.js`를 `.tsx`/`.ts`로 옮긴 결과. JSX 원본은 지우지 않습니다.
 
 ---
 
@@ -30,7 +30,7 @@ npm install -D typescript @types/react @types/react-dom @types/node
 Vite는 `--template react-ts`로 처음부터 TS 프로젝트를 만들 수도 있지만, 이번엔 **이미 만든 JS 프로젝트를 나중에 전환**하는 실무에 더 흔한 시나리오를 실습했습니다. 새 `react-ts` 템플릿을 참고용으로 하나 만들어서 설정 파일 3개를 그대로 가져왔습니다.
 
 ```
-demo/
+TSX_study/demo/
 ├─ tsconfig.json         # tsconfig.app.json / tsconfig.node.json을 가리키기만 하는 진입점
 ├─ tsconfig.app.json      # src/ 코드에 적용되는 설정 (JSX, 브라우저 lib 등)
 └─ tsconfig.node.json     # vite.config.ts 자체에 적용되는 설정 (Node 환경)
@@ -39,6 +39,8 @@ demo/
 앱 코드용 설정과 빌드 설정용 설정을 분리하는 이유: `vite.config.ts`는 Node.js 환경에서 실행되고 `src/` 코드는 브라우저 환경을 대상으로 하므로, 사용 가능한 전역 타입(`lib`)이 서로 다르기 때문입니다.
 
 ### 1.3 파일 확장자 변경
+
+이 저장소에서는 아래 절차를 `JSX_study/demo` 안에서 실행해 원본을 지우지 않았습니다. `.jsx`/`.js`는 `JSX_study/demo`에 남고, 바꾼 뒤의 `.tsx`/`.ts`는 `TSX_study/demo`에 있습니다.
 
 ```bash
 # 컴포넌트/페이지: .jsx → .tsx (JSX 문법을 쓰는 파일)
@@ -167,10 +169,10 @@ import { fruitCatalog, type CatalogFruit } from '../data/fruitCatalog.ts'
 
 ## 3. 기업형 폴더 구조 최종 정리
 
-study0 7장에서 예고했던 구조가 `demo/` 안에 자연스럽게 완성되었습니다.
+study0 7장에서 예고했던 구조가 `TSX_study/demo` 안에 자연스럽게 완성되었습니다. 같은 화면의 JSX 버전은 `JSX_study/demo`에 남아 있습니다.
 
 ```
-demo/src/
+TSX_study/demo/src/
 ├─ api/            # 백엔드 호출 함수 (axios 인스턴스 + 엔드포인트 함수)
 │  ├─ client.ts
 │  └─ posts.ts
@@ -272,7 +274,7 @@ export default defineConfig({
 ## 5. 실행 확인
 
 ```bash
-cd demo
+cd TSX_study/demo
 npm install
 npm run build   # tsc -b (타입 검사) && vite build
 npm run dev
@@ -284,7 +286,7 @@ npm run dev
 
 ## 6. 다음 단계 (studyFinal)
 
-지금까지 만든 모든 요소를 새 프로젝트(`project/`)에 모아서 미니 게시판 웹사이트를 완성합니다:
+지금까지 만든 모든 요소를 새 프로젝트(`TSX_study/project`)에 모아서 미니 게시판 웹사이트를 완성합니다:
 
 - Vue.js 학습에서 만든 미니 게시판을 React + TypeScript로 재구현
 - 로그인 후에만 접근 가능한 보호된 라우트

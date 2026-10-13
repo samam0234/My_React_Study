@@ -14,7 +14,7 @@ study1의 정적인 과일 목록을 `useState`로 "진짜 상태"로 바꿔서,
 - [ ] 백엔드와 CORS 연동
 ```
 
-대응하는 실습 프로젝트: [`demo/`](./demo) — `FruitInventoryPractice.jsx`를 새로 추가 (study1의 `FruitListPractice`는 그대로 남겨서 "정적 props vs 동적 state" 대조가 되도록 함)
+대응하는 실습 프로젝트: [`JSX_study/demo`](./JSX_study/demo) — `FruitInventoryPractice.jsx`를 새로 추가 (study1의 `FruitListPractice`는 그대로 남겨서 "정적 props vs 동적 state" 대조가 되도록 함)
 
 ---
 
@@ -122,7 +122,7 @@ study0/study1에서 `key`는 "React가 리스트 항목을 추적하는 식별�
 ## 7. 실행 확인
 
 ```bash
-cd demo
+cd JSX_study/demo
 npm run dev
 ```
 

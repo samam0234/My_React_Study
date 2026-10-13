@@ -13,7 +13,7 @@
 - [ ] 백엔드와 CORS 연동
 ```
 
-대응하는 실습 프로젝트: [`demo/`](./demo) — `react-router-dom` 설치, `pages/` 폴더 신설
+대응하는 실습 프로젝트: [`JSX_study/demo`](./JSX_study/demo) — `react-router-dom` 설치, `pages/` 폴더 신설
 
 ---
 
@@ -30,7 +30,7 @@ Vue Router와 마찬가지로, React 자체 기능이 아니라 **서드파티 �
 study1~4에서 `App.jsx`에 계속 쌓아온 실습 컴포넌트들을 `pages/HomeView.jsx`로 옮기고, `App.jsx`는 "어떤 URL에서 어떤 페이지를 보여줄지"만 담당하도록 바꿨습니다.
 
 ```
-demo/src/
+JSX_study/demo/src/
 ├─ App.jsx                    # 라우터 설정만 담당
 ├─ data/
 │  └─ fruitCatalog.js          # 라우팅 실습용 목업 데이터
@@ -146,7 +146,7 @@ function FruitDetailPage() {
 ## 5. 실행 확인
 
 ```bash
-cd demo
+cd JSX_study/demo
 npm run dev
 ```
 
