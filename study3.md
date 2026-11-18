@@ -1,155 +1,188 @@
-# study3 — useEffect / useRef 실습
+# study3 — 데이터 다루기: 상태(state)·이벤트·Effect·ref
 
-`useState`/이벤트 핸들링에 이어, 이번엔 "렌더링과 직접 관련 없는 일"을 다루는 두 Hook을 실습합니다.
+> 🎯 **목표**: `useState`로 바뀌는 데이터를 관리하고, `useEffect`/`useRef`로 렌더링 밖의 일(타이머, 포커스)을 다루며, 자식→부모 데이터 전달(콜백 props)까지 만든다.
 
-```
-- [x] Vite + React + JS 프로젝트 생성
-- [x] 함수 컴포넌트, props, children
-- [x] useState / useEffect / useRef                  (이번 문서로 전부 실습 완료)
-- [x] 리스트 렌더링과 key
-- [ ] React Router 중첩 라우팅
-- [ ] 폼 상태 다루기 + API 연동 (axios / fetch)
-- [ ] Context 또는 Zustand로 전역 상태 (로그인)
-- [ ] 백엔드와 CORS 연동
-```
-
-대응하는 실습 프로젝트: [`JSX_study/demo`](./JSX_study/demo) — `FruitSearchPractice.jsx` 추가
+- 이전: [study2.md](./study2.md) — 핵심 구조
+- 다음: [study4.md](./study4.md) — 라우팅·요청 처리
+- 실습 코드: [`FruitInventoryPractice.jsx`](./JSX_study/demo/src/components/FruitInventoryPractice.jsx), [`FruitSearchPractice.jsx`](./JSX_study/demo/src/components/FruitSearchPractice.jsx), [`LikeableFruitList.jsx`](./JSX_study/demo/src/components/LikeableFruitList.jsx)
 
 ---
 
-## 1. `useEffect` — Vue의 `onMounted`/`watch`에 대응
+## 📖 이론
 
-### 1.1 기본 형태
+### 3.1 `useState` — 바뀌면 다시 그려지는 값
 
 ```jsx
-useEffect(() => {
-  // 실행할 부수효과(side effect)
-  return () => {
-    // (선택) 클린업 함수 — 다음 effect 실행 전, 또는 언마운트 시 호출
-  }
-}, [의존성_배열])
+const [count, setCount] = useState(0)
+setCount(count + 1)   // 반드시 setter로 — 직접 count = 1 은 화면이 안 바뀜
 ```
 
-`useEffect`는 "**렌더링 이후에** 이 코드를 실행해라"는 뜻입니다. 화면을 그리는 것과 직접 관련 없는 일(콘솔 로그, 타이머, 네트워크 요청, DOM 직접 조작 등)을 여기서 처리합니다.
+- 바뀌는 값 중 **화면에 영향이 있는 것**만 state로 둡니다.
+- **다른 값에서 계산할 수 있는 것**은 state가 아니라 렌더링 중 계산(파생 값)입니다. (예: `visibleFruits`)
 
-### 1.2 의존성 배열(두 번째 인자)에 따른 3가지 동작
+### 3.2 불변성 — 배열·객체는 "새로 만들어" 넘긴다
 
-| 의존성 배열 | 실행 시점 | Vue 대응 |
+| 하고 싶은 일 | ❌ 직접 변경 | ✅ 새 값 |
 |---|---|---|
-| 생략 | 매 렌더링마다 실행 | (Vue엔 정확히 대응하는 것 없음, 거의 안 씀) |
-| `[]` (빈 배열) | **최초 마운트 시 딱 1번만** | `onMounted(() => {...})` |
-| `[a, b]` | 마운트 시 + `a` 또는 `b`가 바뀔 때마다 | `watch([a, b], () => {...})` |
+| 추가 | `arr.push(x)` | `[...prev, x]` |
+| 수정 | `arr[0].a = 1` | `prev.map(i => i.id===id ? {...i, a:1} : i)` |
+| 삭제 | `arr.splice(i,1)` | `prev.filter(i => i.id !== id)` |
+| 객체 필드 | `obj.name = 'x'` | `{ ...prev, name: 'x' }` |
 
-이번 실습에서는 뒤 두 가지를 모두 씁니다.
+React는 **이전 참조와 새 참조를 비교**해서 바뀌었는지 판단하기 때문입니다.
+
+### 3.3 함수형 업데이트
+
+이전 값에 기대는 변경은 `setX(prev => …)` 형태로 씁니다. 같은 렌더링 안에서 여러 번 호출해도 최신 값에 이어서 계산됩니다.
+
+### 3.4 `useEffect` — 렌더링 밖의 일
+
+| 의존성 배열 | 실행 시점 |
+|---|---|
+| 없음 | 렌더링마다 (거의 안 씀) |
+| `[]` | 마운트 후 1번 (+ 언마운트 때 cleanup) |
+| `[a, b]` | 처음 + `a` 또는 `b`가 바뀔 때마다 |
+
+- **cleanup(return 함수)** 은 다음 effect 실행 직전/언마운트 때 실행됩니다. 타이머·구독·이벤트 리스너 해제에 씁니다.
+
+### 3.5 `useRef`
+
+- `ref.current`에 값을 두면 **바뀌어도 리렌더링이 일어나지 않습니다.**
+- 용도 ① DOM 요소 직접 접근(`focus()`), ② 렌더링과 무관한 값 보관(타이머 id, 렌더 횟수).
+
+### 3.6 상태 끌어올리기 + 콜백 props
+
+자식이 부모의 상태를 바꾸고 싶으면, **부모가 변경 함수를 props로 내려줍니다.** (Vue의 `emit`에 해당하는 자리)
+
+---
+
+## 🛠️ 실기
+
+### 1. 상태로 바꾼 재고 목록 — [`FruitInventoryPractice.jsx`](./JSX_study/demo/src/components/FruitInventoryPractice.jsx)
 
 ```jsx
-// 마운트 시 1번만: input에 자동 포커스
-useEffect(() => {
-  console.log('[FruitSearchPractice] 마운트됨 → input에 자동 포커스')
-  inputRef.current.focus()
+const [fruits, setFruits] = useState(initialFruits)
+const [showOnlyInStock, setShowOnlyInStock] = useState(false)
 
-  return () => {
-    console.log('[FruitSearchPractice] 언마운트됨')
-  }
-}, [])
+function addRandomFruit() {
+  const name = fruitPool[Math.floor(Math.random() * fruitPool.length)]
+  setFruits((prev) => [...prev, { id: nextId++, name, inStock: true }])
+}
+
+function toggleStock(id) {
+  setFruits((prev) =>
+    prev.map((fruit) => (fruit.id === id ? { ...fruit, inStock: !fruit.inStock } : fruit)),
+  )
+}
+
+function removeFruit(id) {
+  setFruits((prev) => prev.filter((fruit) => fruit.id !== id))
+}
+
+const visibleFruits = showOnlyInStock ? fruits.filter((fruit) => fruit.inStock) : fruits
 ```
 
-```jsx
-// keyword가 바뀔 때마다: 디바운스 검색
-useEffect(() => {
-  const timer = setTimeout(() => {
-    setDebouncedKeyword(keyword)
-  }, 300)
+| 줄(원본) | 설명 |
+|---|---|
+| 14~15 | 상태 2개: **원본 목록**, **필터 on/off**. 필터된 목록은 state로 두지 않음 |
+| 17~21 | 추가 = 스프레드로 새 배열. `nextId`는 컴포넌트 밖의 `let`(렌더링과 무관한 id 발급) |
+| 23~29 | 수정 = `map` 안에서 해당 항목만 새 객체로 교체 |
+| 31~33 | 삭제 = `filter` |
+| 39~41 | **파생 값**. `fruits`와 `showOnlyInStock`에서 매번 계산 → 따로 동기화할 필요 없음 |
+| 57~59 | 빈 상태도 화면에 명시 (`표시할 과일이 없습니다.`) |
+| 62 | 목록 `key`는 `fruit.id` — 삭제·추가 때 순서가 바뀌어도 항목 정체성 유지 |
 
-  return () => clearTimeout(timer)
-}, [keyword])
-```
-
-### 1.3 클린업 함수 — "다음 실행 전에 뒷정리"
-
-`return () => {...}`로 반환한 함수는:
-
-1. **같은 effect가 다시 실행되기 직전** (의존성이 바뀌어서), 그리고
-2. **컴포넌트가 화면에서 사라질 때(언마운트)**
-
-에 호출됩니다. 디바운스 예제에서 클린업이 왜 필요한지 보면:
-
-- 사용자가 "사" → "사과"로 빠르게 타이핑하면 `keyword`가 두 번 바뀌면서 `useEffect`도 두 번 실행됩니다.
-- 클린업이 없다면 "사"에 대한 타이머와 "사과"에 대한 타이머가 **둘 다** 300ms 뒤에 실행되어, 화면이 잠깐 "사" 검색 결과로 깜빡였다가 "사과" 결과로 바뀌는 문제가 생깁니다.
-- 클린업(`clearTimeout(timer)`)이 있으면, 새 타이핑이 들어올 때마다 이전 타이머를 취소하므로 **타이핑이 멈춘 뒤 300ms** 뒤에만 실제로 검색이 반영됩니다 — 이게 "디바운스"입니다.
-
-**StrictMode와의 관계**: study1에서 본 `<StrictMode>`는 개발 모드에서 컴포넌트를 일부러 마운트→언마운트→재마운트 시켜봅니다. 그래서 개발 중에는 콘솔에 "마운트됨"이 두 번 찍히는 것처럼 보일 수 있는데, 이건 버그가 아니라 "클린업을 안 써서 생기는 문제를 미리 잡아내기 위한" 의도된 동작입니다. 클린업 함수를 제대로 작성했다면 실제 동작에는 문제가 없습니다.
-
-## 2. `useRef` — 두 가지 용도
-
-### 2.1 용도 1: DOM 요소 직접 참조
+### 2. effect와 ref — [`FruitSearchPractice.jsx`](./JSX_study/demo/src/components/FruitSearchPractice.jsx)
 
 ```jsx
 const inputRef = useRef(null)
+const renderCount = useRef(0)
 
-useEffect(() => {
+useEffect(() => {                         // ① 마운트 1회
   inputRef.current.focus()
+  return () => { console.log('언마운트됨') }
 }, [])
 
-return <input ref={inputRef} ... />
-```
+useEffect(() => {                         // ② keyword 변경 시 디바운스
+  const timer = setTimeout(() => setDebouncedKeyword(keyword), 300)
+  return () => clearTimeout(timer)
+}, [keyword])
 
-- `useRef(null)`로 만든 `ref` 객체를 JSX 태그의 `ref` 속성에 연결하면, React가 렌더링 후 `inputRef.current`에 **실제 DOM 요소**를 넣어줍니다.
-- Vue에서 `<input ref="myInput">` 후 `myInput.value.focus()`로 접근하는 것과 목적이 완전히 같습니다.
-
-### 2.2 용도 2: "리렌더링을 유발하지 않는" 값 저장
-
-```jsx
-const renderCount = useRef(0)
 renderCount.current += 1
 ```
 
-- `useState`와 달리, `.current` 값을 바꿔도 **컴포넌트가 다시 렌더링되지 않습니다.**
-- "화면에 보여줄 필요는 없지만 렌더링 사이에 기억해야 하는 값"(타이머 ID, 이전 값, 렌더링 횟수 카운트 등)에 적합합니다.
-- 이 실습에서는 `renderCount.current`를 화면에 출력은 하지만, 그 값이 바뀌었다고 해서 화면이 다시 그려지는 게 아니라 **다른 상태(keyword 등)가 바뀌어 리렌더링될 때 "곁다리로" 최신 값이 같이 표시되는 것**입니다.
-
-### 2.3 `useState` vs `useRef` 선택 기준
-
-| 상황 | 선택 |
+| 줄(원본) | 설명 |
 |---|---|
-| 값이 바뀌면 화면에 반영되어야 함 | `useState` |
-| 값이 바뀌어도 화면과 무관함 (타이머 ID, 이전 값 등) | `useRef` |
-| DOM 요소에 직접 접근해야 함 (포커스, 스크롤, 크기 측정) | `useRef` |
+| 9~10 | `inputRef`는 DOM 접근용, `renderCount`는 렌더링과 무관한 값 |
+| 13~21 | `[]` → 마운트 직후 1번 포커스. return 함수는 **언마운트 때** 실행 |
+| 24~31 | `keyword`가 바뀔 때마다 300ms 타이머를 건다. **다음 입력이 들어오면 cleanup이 이전 타이머를 취소** → 입력이 멈춘 뒤에만 반영(디바운스) |
+| 34 | ref는 값이 바뀌어도 리렌더링을 일으키지 않음. 화면의 "N번 렌더링" 문구로 체감 |
+| 36 | `debouncedKeyword`로 검색. 입력값(`keyword`)과 검색 반영값을 **분리**한 것이 핵심 |
 
-## 3. 마운트/언마운트를 직접 눈으로 확인하기
+> 💡 `StrictMode`(개발 모드)에서는 effect가 마운트 → 언마운트 → 마운트로 한 번 더 도는 것처럼 보일 수 있습니다. cleanup이 제대로 짝을 이루는지 확인하는 장치입니다.
 
-클린업 함수는 "사라질 때 실행된다"는 걸 눈으로 보기 위해, `App.jsx`에 마운트/언마운트를 반복시키는 버튼을 추가했습니다.
+### 3. 자식 → 부모 — [`LikeableFruitList.jsx`](./JSX_study/demo/src/components/LikeableFruitList.jsx)
 
 ```jsx
-const [showSearch, setShowSearch] = useState(true)
-
-// ...
-<button onClick={() => setShowSearch((prev) => !prev)}>
-  {showSearch ? '검색 컴포넌트 언마운트' : '검색 컴포넌트 다시 마운트'}
-</button>
-{showSearch && <FruitSearchPractice />}
+function FruitLikeCard({ fruit, liked, onSelect, onToggleLike }) {
+  function handleLikeClick(event) {
+    event.stopPropagation()          // 카드 클릭(onSelect)까지 번지지 않게
+    onToggleLike(fruit.id)
+  }
+  return (
+    <li className="fruit-card" onClick={() => onSelect(fruit.id)}>
+      ...
+      <button className={liked ? 'active' : ''} onClick={handleLikeClick}>
 ```
 
-`showSearch`가 `false`가 되는 순간 `<FruitSearchPractice />`는 JSX 트리에서 완전히 빠지고, React는 이를 "언마운트"로 처리해서 study3에서 등록한 클린업 함수(`console.log('언마운트됨')`)를 실행합니다. 다시 `true`로 바꾸면 새로 마운트되어 `useEffect`의 마운트 effect(자동 포커스)가 다시 실행됩니다.
-
-## 4. 실행 확인
-
-```bash
-cd JSX_study/demo
-npm run dev
+```jsx
+const [likedIds, setLikedIds] = useState([])
+function handleToggleLike(id) {
+  setLikedIds((prev) =>
+    prev.includes(id) ? prev.filter((likedId) => likedId !== id) : [...prev, id])
+}
 ```
 
-브라우저 개발자 도구 콘솔을 열어둔 상태로:
+| 포인트 | 설명 |
+|---|---|
+| 상태 위치 | `likedIds`는 **부모**에 있음. 자식은 id만 알려주고, 어떻게 바꿀지는 부모가 결정 |
+| `stopPropagation` | 버튼 클릭이 부모 `<li onClick>`까지 올라가는 이벤트 버블링을 차단 |
+| 상태 모양 | 객체 배열이 아니라 **id 배열**만 저장 → 중복 정보 없음. (같은 패턴이 TSX 프로젝트의 [`favoritesStore.ts:11-20`](./TSX_study/project/src/store/favoritesStore.ts)로 이어짐) |
 
-- 페이지 로드 직후 → 검색 input에 자동으로 포커스가 가 있는지, 콘솔에 "마운트됨" 로그가 찍히는지
-- 검색창에 빠르게 타이핑 → 결과 목록이 타이핑 중엔 안 바뀌다가, **타이핑을 멈추고 약 0.3초 뒤에** 갱신되는지 (디바운스 확인)
-- "검색 컴포넌트 언마운트" 클릭 → 컴포넌트가 사라지고 콘솔에 "언마운트됨" 로그가 찍히는지
-- 다시 "다시 마운트" 클릭 → 컴포넌트가 새로 나타나고 input에 다시 자동 포커스가 가는지 (마운트 effect 재실행 확인)
-- "지금까지 N번 렌더링되었습니다" 문구의 숫자가 타이핑할 때마다 올라가는지 (매 리렌더링마다 `renderCount.current += 1`이 실행됨을 확인)
+### 4. 직접 해 볼 것
 
-`npm run build`로 프로덕션 빌드까지 에러 없이 되는 것을 확인했습니다.
+1. `FruitInventoryPractice`의 `removeFruit`를 `fruits.splice(...)` 후 `setFruits(fruits)`로 바꿔 보고, 화면이 안 바뀌는 이유를 불변성으로 설명하기 (확인 후 원복)
+2. `debounce` 시간을 1000ms로 바꿔 입력→반영 지연을 체감하기
+3. `[]`를 지운 effect(의존성 배열 없음)에 `console.log`를 넣어 **렌더링마다** 실행되는 것을 확인하기
 
-## 5. 다음 단계 (study4 예정)
+---
 
-- 콜백 props로 **자식 → 부모** 통신 패턴 실습 (Vue의 emit에 대응)
-- Controlled Component로 로그인 폼 만들고, 클라이언트 사이드 검증 추가
+## 🐞 오류 노트
+
+| 증상 | 원인 | 해결 |
+|---|---|---|
+| 값을 바꿨는데 화면이 그대로 | 배열·객체를 직접 변경 | 새 배열·객체를 만들어 setter에 전달 |
+| `Too many re-renders` | 렌더링 중에 `setX()` 호출 (`onClick={setX(1)}`) | `onClick={() => setX(1)}` |
+| effect가 무한 반복 | effect 안에서 의존성 값을 set하고, 그 값이 의존성 배열에 있음 | 의존성 재검토, 함수형 업데이트, 파생 값으로 대체 |
+| 이전 값이 계속 찍힘 (stale closure) | 이벤트/타이머가 오래된 렌더의 값을 캡처 | `setX(prev => …)` 또는 의존성에 포함 |
+| 언마운트 후 `setState` 경고/잘못된 반영 | 비동기 완료가 늦음 | cleanup에서 `ignore` 플래그 (study6 `useFetch`) |
+| 클릭 시 부모 핸들러까지 실행 | 이벤트 버블링 | `event.stopPropagation()` |
+| `inputRef.current`가 `null` | 마운트 전에 접근 | effect/이벤트 핸들러 안에서 접근 |
+
+---
+
+## ☐ 체크리스트
+
+- [ ] 어떤 값이 state이고 어떤 값이 **파생 값**인지 구분해 코드를 짤 수 있다
+- [ ] 추가·수정·삭제를 불변성을 지켜(`spread`/`map`/`filter`) 구현했다
+- [ ] `setX(prev => …)` 함수형 업데이트를 써야 하는 경우를 안다
+- [ ] `useEffect`의 의존성 배열 3가지(없음 / `[]` / `[a]`) 차이를 설명할 수 있다
+- [ ] cleanup 함수로 타이머를 정리하는 디바운스를 구현했다
+- [ ] `useRef`가 `useState`와 다른 점(리렌더링 여부)을 설명할 수 있다
+- [ ] 콜백 props + `stopPropagation`으로 자식→부모 통신을 구현했다
+
+---
+
+## ➡️ 다음 단계 연결
+
+지금까지는 한 화면 안의 데이터였습니다. [study4](./study4.md)에서는 **URL에 따라 화면이 바뀌는 라우팅**과, 요청이 들어와 화면이 그려지기까지의 흐름을 다룹니다.
