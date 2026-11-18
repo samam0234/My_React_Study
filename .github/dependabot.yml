@@ -1,0 +1,14 @@
+version: 2
+updates:
+  - package-ecosystem: npm
+    directory: /TSX_study/final
+    schedule: { interval: weekly }
+  - package-ecosystem: npm
+    directory: /board-mcp
+    schedule: { interval: weekly }
+  - package-ecosystem: gradle
+    directory: /backend-spring
+    schedule: { interval: weekly }
+  - package-ecosystem: github-actions
+    directory: /
+    schedule: { interval: monthly }
