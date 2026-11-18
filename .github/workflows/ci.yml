@@ -15,7 +15,7 @@ jobs:
       run:
         working-directory: backend-spring
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - uses: actions/setup-java@v4
         with:
           distribution: temurin
@@ -31,7 +31,7 @@ jobs:
       run:
         working-directory: TSX_study/final
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - uses: actions/setup-node@v4
         with:
           node-version: 22
@@ -48,7 +48,7 @@ jobs:
       run:
         working-directory: board-mcp
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - uses: actions/setup-node@v4
         with:
           node-version: 22
@@ -65,7 +65,7 @@ jobs:
       run:
         working-directory: TSX_study/final
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - uses: actions/setup-java@v4
         with:
           distribution: temurin
@@ -91,5 +91,5 @@ jobs:
     needs: [backend, frontend, mcp]
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - run: docker compose build # api, web 이미지가 모두 빌드되는지 확인
