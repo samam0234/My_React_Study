@@ -1,0 +1,72 @@
+# study17: 대표 조합 1번(React + Spring Boot + PostgreSQL)을 compose 로 묶는다.
+#   cp .env.example .env   # 값을 채운다 (.env 는 커밋하지 않는다)
+#   docker compose up -d --build        →  http://localhost:8080
+#
+# 서비스 이름이 곧 호스트 이름이다: web(Nginx) → api:8080 → db:5432. 컨테이너 안에서 localhost 는 자기 자신이다.
+# 비밀(DB_PASSWORD, JWT_SECRET, ANTHROPIC_API_KEY)은 이 파일에 쓰지 않고 .env 에서 ${변수}로 주입한다.
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: board
+      POSTGRES_USER: board
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-board}
+    ports:
+      - "${DB_PORT:-5432}:5432" # 로컬 개발·테스트용. 운영에서는 ports 를 빼면 compose 내부에서만 보인다
+    volumes:
+      - db-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U board -d board"]
+      interval: 3s
+      timeout: 3s
+      retries: 20
+
+  api:
+    build: ./backend-spring
+    environment:
+      SPRING_PROFILES_ACTIVE: ${SPRING_PROFILES_ACTIVE:-} # 운영은 prod (JWT_SECRET 필수)
+      DB_URL: jdbc:postgresql://db:5432/board # 호스트 이름 = 서비스 이름
+      DB_USER: board
+      DB_PASSWORD: ${DB_PASSWORD:-board}
+      JWT_SECRET: ${JWT_SECRET:-} # 비우면 개발용 임시 키(재시작 시 토큰 무효). 운영에서는 반드시 설정
+      CORS_ORIGIN: http://localhost:${WEB_PORT:-8080} # 같은 도메인이라 사실상 불필요하지만 직접 호출 대비
+      APP_SEED: ${APP_SEED:-true} # 데모 계정(mina/jun/admin@example.com) + 글 25개. 운영에서는 false
+      AI_PROVIDER: ${AI_PROVIDER:-} # 비우면 키가 있을 때 anthropic, 없으면 mock
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
+      AI_MODEL: ${AI_MODEL:-claude-opus-5-5}
+      AI_DAILY_TOKEN_LIMIT: ${AI_DAILY_TOKEN_LIMIT:-200000}
+    depends_on:
+      db:
+        condition: service_healthy # DB 가 준비된 뒤 시작
+    expose:
+      - "8080"
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://127.0.0.1:8080/health || exit 1"]
+      interval: 5s
+      timeout: 3s
+      retries: 30
+
+  web:
+    build:
+      context: ./TSX_study/final
+      args:
+        VITE_API_BASE_URL: "" # 같은 도메인의 /api 를 사용 (nginx 가 api 로 프록시)
+    ports:
+      - "${WEB_PORT:-8080}:80"
+    depends_on:
+      - api
+
+  # 선택: 게시판을 MCP 서버(Streamable HTTP, /mcp)로 노출한다. docker compose --profile mcp up -d
+  mcp:
+    profiles: ["mcp"]
+    build: ./board-mcp
+    environment:
+      BOARD_API_BASE: http://api:8080
+      MCP_SERVICE_TOKEN: ${MCP_SERVICE_TOKEN:-} # 비어 있으면 MCP 서버는 시작하지 않는다
+    ports:
+      - "${MCP_PORT:-8787}:8787"
+    depends_on:
+      - api
+
+volumes:
+  db-data:
