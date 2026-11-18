@@ -4,9 +4,9 @@ study 문서 기반 학습 진행 내용을 커밋할 때 지켜야 할 규칙�
 
 ## 1. 커밋 대상 확인 순서
 
-1. `study0.md`, `study1.md`, `study2.md`, ... 번호 순서대로 문서를 확인합니다.
+1. `study0.md` ~ `study10.md`, `studyMidpoint.md`, `study11.md` ~ `study18.md`, `studyFinal.md` 순서대로 문서를 확인합니다.
 2. 각 문서 안에서도 위에서 아래(섹션 순서)대로 진행 상황을 파악합니다.
-3. 문서 내용에 대응하는 실습 프로젝트의 코드 변경 사항을 진도와 매칭합니다. study1~9는 `JSX_study/demo`, JSX 응용은 `JSX_study/project`, study10은 `TSX_study/demo`, studyFinal은 `TSX_study/project`입니다.
+3. 문서 내용에 대응하는 실습 프로젝트의 코드 변경 사항을 진도와 매칭합니다. 기초 개념은 `JSX_study/demo`, JSX 응용은 `JSX_study/project`, TS 전환은 `TSX_study/demo`, studyMidpoint는 `TSX_study/project`입니다. (study11~18, studyFinal의 코드는 문서 예제로만 존재)
 
 ## 2. 커밋 단위 (진도 파트별 분리)
 
