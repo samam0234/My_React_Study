@@ -1,0 +1,9 @@
+{
+  "mcpServers": {
+    "board": {
+      "type": "http",
+      "url": "http://localhost:8787/mcp",
+      "headers": { "Authorization": "Bearer ${MCP_SERVICE_TOKEN}" }
+    }
+  }
+}
