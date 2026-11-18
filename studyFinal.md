@@ -1,249 +1,260 @@
-# studyFinal — 종합 실습: 미니 게시판 웹사이트 (React + TypeScript)
+# studyFinal — 심화 응용: 운영 가능한 게시판 서비스
 
-study0부터 study10까지 하나씩 익혔던 개념을 전부 합쳐서, 연습 프로젝트(`JSX_study/demo`, `TSX_study/demo`)가 아닌 **새 프로젝트** [`TSX_study/project`](./TSX_study/project)에 작지만 실제로 동작하는 웹사이트를 만들었습니다. [Vue.js 학습의 studyFinal](../vue.js/studyFinal.md)에서 만든 미니 게시판과 같은 소재(JSONPlaceholder)를 React + TypeScript로 재구현했습니다 (Notion 학습 목표의 예제 1번).
+> 🎯 **목표**: [studyMidpoint](./studyMidpoint.md)의 게시판 + 로그인에 study11~18의 결과를 합쳐, **React + Spring Boot + PostgreSQL**로 실제 백엔드·테스트·CI 파일·Docker·AI 기능까지 갖춘 **운영 가능한 서비스**를 완성하고, **직접 실행한 결과만** 기록한다.
 
-```
-- [x] Vite + React + TS 프로젝트 생성                 (처음부터 TS로 시작 — study1/study10)
-- [x] 함수 컴포넌트, props, children                  (study1, study4)
-- [x] useState / useEffect / useRef                   (study2, study3)
-- [x] 리스트 렌더링과 key                              (study2)
-- [x] React Router 라우팅 (목록 → 상세)                (study5)
-- [x] 폼 상태 다루기 + API 연동 (axios)                (study4, study7)
-- [x] Zustand로 전역 상태 (로그인 + 즐겨찾기)          (study9)
-- [x] TypeScript, 기업형 폴더 구조                     (study10)
-- [x] 로그인 후 보호된 라우트                          (study6, study8 — Notion 예제 2)
-- [x] 페이지네이션 목록                                (study7 — Notion 예제 3)
-```
+- 이전: [study18.md](./study18.md) — AI 연동·MCP
+- 결과 코드: [`TSX_study/final`](./TSX_study/final) ([README](./TSX_study/final/README.md)), [`backend-spring/`](./backend-spring) ([README](./backend-spring/README.md)), [`board-mcp/`](./board-mcp), [`docker-compose.yml`](./docker-compose.yml), [`.github/`](./.github)
+- 원본 보존: `TSX_study/project`(midpoint)와 `JSX_study/*`는 **수정하지 않았습니다.** 기존 `Spring_Boot_Study`(별도 저장소)도 수정하지 않았고, 노션 Spring Boot 페이지의 "공통 API 스펙 v1 맞춤" 항목을 이 저장소의 새 `backend-spring`에 처음부터 반영했습니다.
+
+> 📌 **이 문서의 규칙**: 실행해서 확인한 것만 "완료"로 적습니다. 실행하지 못한 것은 이유와 함께 "미완료/미측정"으로 남겼습니다 (6.4절과 부록).
 
 ---
 
-## 1. 왜 연습 프로젝트가 아니라 `TSX_study/project`를 새로 만들었나
+## 1. 목표
 
-`JSX_study/demo`와 `TSX_study/demo`는 각 개념을 **하나씩 떼어놓고** 실습하기 위해 한 화면에 실습 컴포넌트를 계속 쌓아온 "연습장"입니다. `studyFinal`의 목적은 "이 개념들을 실제 서비스에서 어떻게 **조합**해서 쓰는지" 감을 잡는 것이므로, 처음부터 하나의 완결된 웹사이트 구조로 새로 설계했습니다. 또한 study10에서 배운 대로 **처음부터 TypeScript(`--template react-ts`)로 생성**해서, "JS로 만들고 나중에 전환"이 아니라 "새 프로젝트는 처음부터 TSX로 시작"하는 실무에 더 흔한 흐름도 함께 실습했습니다.
+| 항목 | 최종 목표 | 결과 |
+|---|---|---|
+| 서비스 | 로그인·글 작성·댓글·즐겨찾기 + AI 기능 | 구현 (2절) |
+| 백엔드 | **Spring Boot + PostgreSQL**, 공통 API 스펙 v1 | `backend-spring` 구현, JUnit **45개**(Testcontainers PostgreSQL 16) |
+| 품질 | 타입·린트·포맷, 단위·통합·E2E | strict 타입, oxlint 0, Prettier, 테스트 **83** + E2E **19**(+cors 2, docker 22) |
+| 운영 | 에러 경계·로깅·보안 점검 | 구현, `npm audit` 조치 (모니터링 서비스는 미적용) |
+| 배포 | Docker + 외부 자동 배포 | compose(web+api+db) 구동·검증 **완료**, **외부 배포는 미완료** |
+| AI | 백엔드 `/api/ai/chat`·SSE, MCP | 구현·모의 모델로 검증, **실제 API 호출은 미실행** |
 
-```bash
-npm create vite@latest TSX_study/project -- --template react-ts
-cd TSX_study/project
-npm install react-router-dom axios zustand
+### 합친 결과 한눈에
+
+| study | 산출물 | 위치 |
+|---|---|---|
+| 6·7 | Spring Boot API 연결, JWT·`persist`·인터셉터, CORS, 역할(Role) | `backend-spring/`, `final/src/api`, `store/authStore.ts` |
+| 8 | 폴더 구조, `.env`, `config.ts`, `@/` 별칭 | `final/` 전반 |
+| 9·15 | Vitest·RTL·MSW·Playwright, JUnit·Testcontainers | `final/src/**/*.test.*`, `final/e2e/`, `backend-spring/src/test` |
+| 10·17 | 빌드, Dockerfile, Nginx, compose, CI 파일 | `final/Dockerfile`, `final/nginx/`, `backend-spring/Dockerfile`, 루트 `docker-compose.yml`, `.github/` |
+| 11 | TanStack Query (+ Redux Toolkit 비교 구현) | `final/src/queries/posts.ts`, `store/redux/` |
+| 12 | 라우트 `lazy`, `memo`, `staleTime`, 번들 측정 | `final/src/App.tsx` 등 |
+| 13 | Tailwind v4, 반응형, 다크 모드 토글, 접근성 | `final/src/index.css`, `App.css`, `ThemeToggle` |
+| 14 | strict, zod, oxlint, Prettier | 설정 파일, `npm run check` |
+| 16 | Error Boundary, `ApiError`, logger, CSP, Spring 보안 필터 | `final/src/components`, `api/errors.ts`, `lib/logger.ts`, `nginx/`, `security/` |
+| 18 | `/api/ai/chat`·SSE, `useSummary`, "AI로 다듬기", MCP(HTTP) | `backend-spring/…/ai`, `final/src/api/ai.ts`, `board-mcp/` |
+
+## 2. 기능 확장
+
+| 영역 | midpoint | final | 상태 |
+|---|---|---|---|
+| 데이터 | JSONPlaceholder 읽기 | 스펙 v1 API, 서버 검색 `q`·페이지(`meta.totalPages`), URL이 상태의 원본 | ✅ |
+| 글 | 조회 | 작성·수정·삭제, 작성자만 수정/삭제 UI(관리자는 삭제 가능, 서버가 403으로 최종 검사) | ✅ |
+| 댓글 | 조회 | 작성·삭제 | ✅ |
+| 로그인 | 가짜 | 가입·로그인(JWT 1시간), 새로고침 유지, 401/403 처리, 중복 이메일 `EMAIL_TAKEN` | ✅ |
+| 즐겨찾기 | 메모리 | `persist`(localStorage) | ✅ (서버 저장은 아님) |
+| 마이페이지 | `게시글 #N` | 글 제목 표시(`useQueries`), 삭제된 글 안내 | ✅ |
+| 서버 상태 | `useFetch` | TanStack Query (캐시·재시도·무효화) | ✅ |
+| 화면 | 직접 CSS | Tailwind(반응형·다크 모드 토글), 접근성 | ✅ (MUI·shadcn은 미적용) |
+| 에러 | 화면별 문구 | Error Boundary, `ApiError`, 서버 `fields`를 폼 필드 아래에 표시, 404 라우트 | ✅ |
+| AI | 없음 | 글 요약 스트리밍, 글쓰기 "AI로 다듬기", MCP(읽기 전용 도구 2개 + 리소스) | ✅ 모의 모델로 검증 |
+
+### 실제 구현 순서
+
+| 단계 | 한 일 | 확인 |
+|---|---|---|
+| 0 | `TSX_study/project`를 `final/`로 복사 (원본 보존) | — |
+| 1 | 품질 기반: `strict`, 별칭, Prettier, `check` 스크립트 | `npm run check` |
+| 2 | `config.ts`·`.env.*`, `apiClient` 인터셉터, `ApiError`, zod 타입 | typecheck |
+| 3 | 인증: persist, 로그인·가입, `SessionWatcher`, `ProtectedRoute` | 테스트·E2E |
+| 4 | TanStack Query 훅 + 목록·상세·폼·마이페이지 | 테스트 |
+| 5 | Tailwind·접근성·Error Boundary·lazy·다크 모드 | `vite build` |
+| 6 | **Spring Boot 백엔드**(Flyway·PostgreSQL·JWT·스펙 v1·AI) 작성 | `./gradlew test` 45개 |
+| 7 | `useSummary`·`api/ai.ts`·"AI로 다듬기", `board-mcp`(HTTP) | 각 테스트 |
+| 8 | 테스트 작성(MSW) → 버그 수정 → Playwright(실제 PostgreSQL+Spring+Vite) | 83 + E2E 19 |
+| 9 | CORS 직접 호출 검증 | `e2e:cors` |
+| 10 | Dockerfile·Nginx·compose·CI 파일 → 빌드·기동 | `e2e:docker` 22개 |
+| 11 | `npm audit` 조치, 문서·노션 기록 | — |
+
+### 구조 (실제)
+
+```text
+react/
+├─ TSX_study/final/          ← 프론트 (src 구조는 final/README.md)
+├─ backend-spring/           ← Spring Boot 4 + JPA + Flyway + PostgreSQL (공통 API 스펙 v1, 테스트 45)
+├─ board-mcp/                ← 읽기 전용 MCP 서버 (Streamable HTTP, Bearer 인증, 테스트 6)
+├─ docker-compose.yml, .env.example, .mcp.json
+└─ .github/workflows/ci.yml, deploy.yml, dependabot.yml   (작성만, GitHub 미실행)
 ```
 
-## 2. 사이트 소개: 미니 게시판 (Mini Board)
+### 공통 API 스펙 v1 반영 (노션 "HTTP · REST · API 설계" + Spring Boot 페이지의 6항목)
 
-JSONPlaceholder(study7에서 쓴 그 API)의 게시글/댓글 데이터를 이용한 간단한 게시판입니다.
+| 스펙 | 구현 | 확인 |
+|---|---|---|
+| 경로 `/api/...`, `/health`만 접두어 없음 | ✅ | `PlatformApiTest` |
+| 응답 `{data}` / `{data, meta}`, 페이지 1부터, `limit` 기본 10·최대 50, `q`, `sort` (`createdAt`/`-createdAt`/`-commentCount`) | ✅ | `PostApiTest` |
+| 오류 `{error:{code,message,fields,requestId}}`, 코드 11종(+AI 2종), `X-Request-Id`, 응답 `Content-Type: application/json; charset=utf-8` | ✅ `@RestControllerAdvice` + 필터 | `PostApiTest`·`PlatformApiTest`, E2E |
+| `DELETE /api/posts/{id}` 인가: 스펙은 작성자만 | ✅ 작성자 + (확장) **관리자 `role=admin`** 삭제 — 노션 인증·인가의 역할(Role) 항목. 수정(PATCH)은 작성자만 | `PostApiTest`(관리자), E2E |
+| POST 201 + `Location`, DELETE 204, 수정은 PATCH만 | ✅ | 〃 |
+| Bearer JWT 1시간, 비밀은 `JWT_SECRET` 환경 변수 (prod 필수) | ✅ | `AuthApiTest` |
+| CORS는 `CORS_ORIGIN` 환경 변수(와일드카드 없음) | ✅ | `PlatformApiTest`, `e2e:cors` |
+| `/api-docs`(OpenAPI), `/swagger-ui.html` | ✅ springdoc | `PlatformApiTest` |
+| DB: PostgreSQL, `TEXT[]` tags, `JSONB` meta, `TIMESTAMPTZ`, soft delete, FK 인덱스 | ✅ Flyway `V1__init.sql` | `psql`로 6개 테이블 확인 |
+| 입력 크기 제한 413 `PAYLOAD_TOO_LARGE`, 로그인 시도 제한 `RATE_LIMITED` | ✅ (단일 인스턴스 메모리) | `PlatformApiTest`·`AuthApiTest` |
 
-| 기능 | 대응하는 study |
+## 3. 성능·보안 점검
+
+### 성능 (직접 측정한 것만)
+
+| 지표 | midpoint | final | 측정 방법 |
+|---|---|---|---|
+| 초기 로드 JS (gzip) | 103.44 kB | **142.71 kB** (메인 125.69 + 공용 17.02) | `vite build` 출력 |
+| 라우트 lazy 청크 합계 (gzip) | 없음 | 약 10.2 kB가 초기 로드에서 빠짐 | 〃 |
+| CSS (gzip) | 1.18 kB | 4.12 kB | 〃 |
+| LCP / 리렌더 수 / 요청 수 | **미측정** | **미측정** | Lighthouse·Profiler·Network 사용 안 함 |
+
+해석은 [study12](./study12.md). 기능을 더한 만큼 초기 JS가 늘었고, 이 규모에서 코드 분할의 효과는 작습니다. `memo`/`useCallback`은 적용했지만 **효과를 측정하지 않았습니다.** DB 쪽은 JPA 쿼리에서 N+1을 재현·측정하지 않았습니다.
+
+### 보안 점검
+
+| 점검 | 결과 | 근거 |
+|---|---|---|
+| `dangerouslySetInnerHTML` / `href={입력}` 없음, 본문·AI 출력은 텍스트 출력 | ✅ | pages.test (`<img onerror>` 본문이 `img`를 만들지 않음) |
+| `VITE_` 변수·`dist/`·저장소에 비밀 없음 | ✅ | `sk-ant-` 검색 0건, `.env.*`에 API 주소만 |
+| 토큰 저장: `localStorage` + 만료 1시간 | ⚠️ **위험 인지, 수용** | XSS에 읽힐 수 있음 → CSP로 완화. `httpOnly` 쿠키·Refresh Token은 미구현 |
+| `npm audit` | ✅ 런타임 0 | 개발 도구 `picomatch`는 breaking 수정만 있어 미적용(배포 코드에 불포함). board-mcp 0건. **Gradle 의존성 취약점 점검은 미실행** |
+| CORS 허용 출처가 허용 목록만 (`*` 금지) | ✅ | `PlatformApiTest`, `e2e:cors` |
+| 보안 헤더·CSP (Nginx) | ✅ | `e2e:docker` — CSP 위반 0, 헤더 단언 |
+| SQL 인젝션 방어(JPQL 바인딩 파라미터, 검색어의 `%`·`_`는 문자로 취급), 비밀번호는 해시로만 저장, 응답에 비밀번호 없음 | ✅ | `PostApiTest`(q 검색), `AuthApiTest` |
+| 인가: 남의 글 수정·삭제 403, 비로그인 작성 401, 관리자 삭제 | ✅ | `PostApiTest`·`CommentApiTest`, E2E |
+| 에러 응답에 스택·내부 정보 없음 | ✅ | `GlobalExceptionHandler`(500은 `INTERNAL`), `ErrorFallback` |
+| 로그에 비밀번호·토큰 마스킹 | ✅ | lib.test |
+| AI: 키는 서버에만, 입력 길이·호출 횟수·일일 토큰 한도, 출력은 텍스트로만 렌더링 | ✅ (모의 모델 기준) | `AiApiTest`·`AiLimitsTest` |
+| 클라이언트 모니터링(Sentry 등), 로그인 후 `requestId` UI 표시 | ❌ 미적용 | — |
+
+## 4. Docker·외부 배포
+
+| 항목 | 상태 | 근거 |
+|---|---|---|
+| `Dockerfile`(멀티 스테이지·비 root), `.dockerignore`, `nginx/` (SPA fallback·API/SSE 프록시·캐시 정책·보안 헤더) | ✅ | `docker compose build` 성공 (web 94.4MB, api 669MB) |
+| 로컬 컨테이너에서 `/posts/3` 새로고침 정상 | ✅ | `curl` 200, E2E |
+| `docker compose up`: **web + api + db(PostgreSQL 16)**, healthcheck·볼륨·`.env` 분리 | ✅ | 헬스체크, `e2e:docker` 22개 |
+| GitHub Actions로 ghcr.io 푸시 | ❌ 미실행 | [`deploy.yml`](./.github/workflows/deploy.yml) 작성만 |
+| 외부 서비스(Vercel/Netlify/Render/VPS) 자동 배포, HTTPS | ❌ 미실행 | — |
+
+| 기록 | 값 |
 |---|---|
-| 게시글 목록 (검색, 즐겨찾기 필터, 페이지네이션) | study2(리스트/필터), study7(axios/페이지네이션) |
-| 게시글 카드 컴포넌트 분리 (콜백 props) | study4 |
-| 목록 → 상세 페이지 라우팅 | study5 |
-| 로그인 폼 (Controlled Component + 검증) | study4 |
-| 로그인 여부 + 즐겨찾기 전역 상태 공유 | study8, study9 |
-| 로그인 후 보호된 마이페이지 | study6 |
-| 게시글 상세 + 댓글 병렬 요청 | study3(useEffect 응용), study7(Promise.all) |
-| 타입 정의 전체 | study10 |
+| 배포 URL | **없음** (외부 배포 미실행) |
+| 프론트·API 구성 | 같은 도메인 `/api` 프록시 (Nginx → Spring Boot) — CORS 불필요 |
+| 롤백 절차 | 미실행 (이미지 태그에 커밋 SHA를 남기도록 `deploy.yml`에 반영) |
 
-## 3. 프로젝트 구조
+## 5. 테스트 결과 (직접 실행한 결과)
 
-```
-TSX_study/project/
-├─ tsconfig.json / tsconfig.app.json / tsconfig.node.json
-├─ src/
-│  ├─ main.tsx
-│  ├─ App.tsx                      # 라우터 설정
-│  ├─ App.css / index.css
-│  ├─ types.ts                     # Post, Comment, User 타입
-│  ├─ api/
-│  │  ├─ client.ts                 # axios 인스턴스
-│  │  └─ posts.ts                  # fetchPosts, fetchPostDetail
-│  ├─ hooks/
-│  │  └─ useFetch.ts               # study7/10에서 만든 훅 재사용
-│  ├─ store/
-│  │  ├─ authStore.ts              # 로그인 상태 (Zustand)
-│  │  └─ favoritesStore.ts         # 즐겨찾기 상태 (Zustand)
-│  ├─ components/
-│  │  ├─ AppHeader.tsx             # 네비게이션 + 로그인 상태 표시
-│  │  ├─ PostCard.tsx              # 게시글 카드 (콜백 props)
-│  │  └─ ProtectedRoute.tsx        # 보호된 라우트
-│  └─ pages/
-│     ├─ PostListPage.tsx          # '/' 목록
-│     ├─ PostDetailPage.tsx        # '/posts/:id' 상세
-│     ├─ LoginPage.tsx             # '/login'
-│     └─ MyPage.tsx                # '/mypage' (보호됨)
-```
+| 종류 | 명령 | 결과 | 비고 |
+|---|---|---|---|
+| 타입·린트·포맷 | `npm run check` (final) | ✅ 통과 | oxlint 경고 0 |
+| 단위·통합 | `npm run test:run` (final) | ✅ **83 / 83** | MSW — api 16, components 13, hooks 8, lib 8, pages 30, store 6, redux 2 |
+| 커버리지 | `npm run coverage` | 문장 92.9% · 분기 81.4% · 함수 91.2% · 라인 94.9% | `main.tsx` 제외 |
+| 백엔드 | `backend-spring` `./gradlew test` | ✅ **45 / 45** | JUnit 5 + MockMvc + **Testcontainers PostgreSQL 16** (Post 16 · Auth 8 · Comment 5 · Platform 8 · Ai 6 · AiLimits 2) |
+| E2E (Chromium) | `npm run e2e` | ✅ **19 / 19** | 실제 PostgreSQL + Spring Boot(`bootJar`) + Vite |
+| E2E: CORS 직접 호출 | `npm run e2e:cors` | ✅ 2 / 2 | 프록시 없이 다른 출처 호출 |
+| E2E: Docker 스택 | `npm run e2e:docker` | ✅ **22 / 22** | Nginx·Spring·PostgreSQL, CSP·캐시·SSE 포함 |
+| board-mcp | `board-mcp` `npm test` | ✅ 6 / 6 | Streamable HTTP, 인증 |
+| 빌드 | `npm run build` (final) | ✅ | |
+| CI | GitHub Actions | ❌ **미실행** | 로컬에서 같은 명령을 각각 실행해 확인 |
 
-study0 7장에서 예고했던 `api/` + `components/` + `hooks/` + `pages/` + `store/` 구조가 그대로 적용되었습니다. 연습 프로젝트의 `data/`(목업 데이터)는 이번엔 전부 실제 API 응답으로 대체되어서 필요 없어졌습니다.
+### 노션 "게시판 API 테스트 체크리스트" 7개 (백엔드)
 
-## 4. 핵심 흐름 하나씩 짚어보기
+| # | 항목 | 테스트 |
+|---|---|---|
+| 1 | 목록 200 + `meta` | `PostApiTest` |
+| 2 | 없는 id → 404 `NOT_FOUND` | 〃 |
+| 3 | 토큰 없이 작성 → 401 | 〃 |
+| 4 | 제목 빈 값 → 400 `fields.title` | 〃 |
+| 5 | 남의 글 수정·삭제 → 403 | 〃 |
+| 6 | 중복 이메일 가입 → 409 `EMAIL_TAKEN` | `PostApiTest` |
+| 7 | 삭제 204 후 조회 404 | `PostApiTest` |
 
-### 4.1 스토어를 역할별로 분리 — `authStore` / `favoritesStore`
+### 테스트·검증 중 발견한 것
 
-```ts
-// store/authStore.ts
-interface AuthState {
-  user: User | null
-  login: (userData: User) => void
-  logout: () => void
-}
-export const useAuthStore = create<AuthState>()((set) => ({ /* ... */ }))
-```
+| 종류 | 내용 | 조치 |
+|---|---|---|
+| **앱 버그** | 삭제가 403일 때 `mutateAsync` 거부 미처리(`Unhandled Rejection`) | `try/catch` ([study9](./study9.md)) |
+| **빌드 오류** | `@apply`를 쓴 별도 CSS에 `@reference "tailwindcss"` 누락 | 추가 ([study6](./study6.md)) |
+| **스펙 불일치** | 엄격 대조 중 `Content-Type`에 `charset=utf-8`이 빠진 것을 발견(스펙 7절) | 필터에서 UTF-8 지정 + 테스트 추가 ([study6](./study6.md)) |
+| **백엔드** | 테스트용 `application.properties`가 운영 설정을 덮어써 전체가 413 | `application-test.properties` + `@ActiveProfiles("test")` ([study6](./study6.md)) |
+| **백엔드** | Jackson 3에서 `write-dates-as-timestamps` 속성이 유효하지 않음 / SSE 한글 깨짐 | 속성 제거 / `charset=UTF-8` 명시 ([study18](./study18.md)) |
+| **연결 오류** | Windows에서 `gradlew.bat`을 못 찾음(상대 경로) | 절대 경로 ([study15](./study15.md)) |
+| **취약점** | `follow-redirects`(런타임), board-mcp `zod` | 업데이트 ([study16](./study16.md)) |
+| 테스트 오류 | `getByLabel`/`getByRole` **부분 일치**, 로그인 직후 이동으로 요청 취소 등 | `exact: true`, 로그인 성공 대기 ([study15](./study15.md)) |
+| 설정 오류 | `docker compose config`가 꺼 둔 profile의 `${VAR:?}`도 평가 | `${VAR:-}` ([study17](./study17.md)) |
 
-```ts
-// store/favoritesStore.ts
-interface FavoritesState {
-  favoritePostIds: number[]
-  toggle: (postId: number) => void
-  isFavorite: (postId: number) => boolean
-}
-export const useFavoritesStore = create<FavoritesState>()((set, get) => ({ /* ... */ }))
-```
+### 수동 시나리오
 
-study9에서는 스토어가 하나(`authStore`)뿐이었지만, 실제 앱은 보통 **관심사별로 스토어를 나눕니다.** 로그인 여부와 즐겨찾기 목록은 서로 다른 이유로 바뀌는 상태이므로 분리했습니다. Vue의 Pinia도 스토어를 여러 개(`stores/auth.js`, `stores/favorites.js`)로 나누는 게 일반적이라, Vue study7/studyFinal과 구조적으로 대응됩니다.
+자동 E2E가 대신하는 것: 보호 라우트 복귀 · 새로고침 후 로그인 유지 · 글 작성/수정/삭제 · 남의 글 403 · 관리자 삭제 · 손상 토큰 401 · 404 · 모바일 폭 · 키보드 로그인 · 다크 모드 토글 · AI 요약(SSE).
+**사람이 직접 하지 않은 것**: 실제 모바일 기기, 스크린 리더, 색 대비 점검, 실제 Claude API 응답 확인.
 
-### 4.2 목록 페이지 — 검색 + 즐겨찾기 필터 + 페이지네이션 (`PostListPage.tsx`)
+## 6. 최종 회고
 
-```tsx
-const { data: posts, loading, error } = useFetch<Post[]>(
-  () => fetchPosts({ page, limit: LIMIT }),
-  [page],
-)
+### 6.1 완성도 점검
 
-const filteredPosts = posts
-  .filter((post) => post.title.includes(keyword.trim()))
-  .filter((post) => !showOnlyFavorites || favoritePostIds.includes(post.id))
-```
+- [x] 기능 확장 표의 항목을 구현했다 (MUI·shadcn은 제외)
+- [x] `check`·테스트·E2E가 로컬에서 통과한다
+- [ ] CI(GitHub Actions)가 녹색이다 — **실행하지 않음**
+- [ ] 외부 URL에서 시나리오를 확인했다 — **외부 배포 없음**
+- [x] 저장소 문서(README, study 문서)가 구현과 어긋나지 않게 갱신했다
 
-- `useFetch`(study7/10)로 현재 페이지의 게시글을 불러오고, 그 결과를 **클라이언트 사이드에서** 검색어 + 즐겨찾기 조건으로 한 번 더 필터링합니다 (study2에서 배운 배열 필터링 응용).
-- 페이지를 넘기면(`page` 변경) `useFetch`의 `deps`가 바뀌어 자동으로 새 페이지를 요청합니다.
+### 6.2 이번 작업에서 배운 것 (6개 축)
 
-### 4.3 게시글 카드 — 콜백 props + 라우팅 결합 (`PostCard.tsx`)
+- **데이터·상태(11)**: 서버 상태는 쿼리 키 설계(`['posts', ...]`)와 `invalidateQueries`가 핵심이었다. 조회 훅 41줄이 사라지는 것보다 경쟁 상태·캐시를 직접 구현하지 않아도 된다는 점이 컸다. 반대로 mutation에서 `mutateAsync`의 거부를 놓치면 실제 버그가 된다.
+- **성능(12)**: 기능을 더하면 초기 JS가 약 +39 kB(gzip) 늘었고 라우트 분할이 줄인 것은 약 10 kB였다. **측정하지 않은 최적화(`memo`)는 효과를 주장하지 않기로** 했다.
+- **UI·접근성(13)**: Tailwind v4는 별도 CSS의 `@apply`에 `@reference`가 필요하다. 접근성은 `label`·`aria-*`·키보드 E2E까지 했고 **색 대비는 못 봤다.**
+- **타입·정적 분석(14)**: `strict` + `erasableSyntaxOnly` 때문에 생성자 매개변수 프로퍼티를 못 쓴다. 타입을 zod 스키마에서 만들면 응답 검증까지 한 곳에서 된다.
+- **테스트·CI(9, 15)**: 프런트는 테스트가 앱 버그 1건을 잡았고, 나머지 실패는 대부분 **테스트 쪽 가정**(부분 일치 선택자, 경쟁 상태)이었다. 백엔드는 **Testcontainers로 진짜 PostgreSQL**에서 돌리니 JSONB·배열·soft delete가 모의 DB가 아닌 실제 동작으로 검증됐다. E2E를 Docker 스택에도 재사용하니 CSP·프록시 문제를 한 번에 확인했다.
+- **보안·운영(16)**: Nginx에서는 `add_header` 상속 규칙과 `proxy_pass` 변수 사용(백엔드 없이 기동)을 겪었다. Spring에서는 JSON 401/403 응답을 직접 만들어야 공통 오류 형식이 지켜졌다.
+- **배포(10, 17)**: 컨테이너까지는 검증했지만 외부 배포·CI 첫 실행은 하지 않았다.
+- **AI·MCP(18)**: 키를 서버에만 두고 JWT·속도·일일 토큰 한도를 테스트했다. **실제 모델 응답은 확인하지 못했고**, tool use·Ollama·AI 앱에 MCP 연결도 하지 않았다.
 
-```tsx
-function PostCard({ post, isFavorite, onToggleFavorite }: PostCardProps) {
-  function handleFavoriteClick(event: MouseEvent<HTMLButtonElement>) {
-    event.preventDefault()      // Link의 페이지 이동을 막음
-    event.stopPropagation()
-    onToggleFavorite(post.id)
-  }
+### 6.3 선택 기준 기록
 
-  return (
-    <Link to={`/posts/${post.id}`} className="fruit-card post-card">
-      <span className="name">{post.title}</span>
-      <button className={isFavorite ? 'active' : ''} onClick={handleFavoriteClick}>
-        {isFavorite ? '★' : '☆'}
-      </button>
-    </Link>
-  )
-}
-```
+| 선택 | 이번 기준 |
+|---|---|
+| `useFetch` vs TanStack Query | 조회만이면 직접 만든 훅도 충분. 캐시·쓰기 후 갱신·재시도가 필요해지면 Query |
+| Zustand vs Redux Toolkit | 로그인 상태를 둘 다 구현해 비교(Redux는 앱에 연결하지 않음). 이 규모에서는 보일러플레이트가 적은 Zustand |
+| 직접 CSS vs MUI vs Tailwind | Tailwind만 적용. MUI·shadcn은 비교하지 못함 |
+| `localStorage` vs `httpOnly` 쿠키 | `localStorage` 선택(SPA + Bearer + 만료 1시간). 위험은 CSP로 완화했을 뿐 해결은 아님 |
+| JPA vs MyBatis | JPA(Spring Data) 선택. 둘을 비교하지는 않았고 N+1도 재현하지 않음 |
+| API 키 위치 | 모델 키는 Spring 서버 환경 변수에만. AI 서버를 따로 두지 않고 같은 백엔드에 `/api/ai/*`로 |
 
-- 카드 전체가 `<Link>`(study5)라서 클릭하면 상세 페이지로 이동합니다.
-- 즐겨찾기 버튼은 `event.preventDefault()`로 `Link`의 페이지 이동까지 막고, `event.stopPropagation()`으로 상위 요소로의 전파도 막은 뒤, `onToggleFavorite`(study4의 콜백 props 패턴)으로 부모에게만 "토글해달라"고 요청합니다.
-- 실제 로그인 체크와 상태 변경은 부모(`PostListPage`)가 담당합니다:
+### 6.4 미완료·다음 목표
 
-```tsx
-function handleToggleFavorite(postId: number) {
-  if (!user) {
-    alert('즐겨찾기는 로그인 후 이용할 수 있습니다.')
-    return
-  }
-  toggleFavorite(postId)
-}
-```
-
-`user`(study8/9의 Zustand 인증 상태)와 `favoritePostIds`가 **둘 다 전역 상태**이기 때문에, "로그인 안 한 사용자는 즐겨찾기를 못 누른다"는 규칙을 목록 페이지, 상세 페이지 어디서든 동일하게 적용할 수 있습니다.
-
-### 4.4 게시글 상세 — 라우트 파라미터 + 병렬 fetch (`PostDetailPage.tsx`)
-
-```tsx
-const { id } = useParams<{ id: string }>()
-
-const { data, loading, error } = useFetch<{ post: Post; comments: Comment[] }>(
-  () => fetchPostDetail(id as string),
-  [id],
-)
-```
-
-```ts
-// api/posts.ts
-export async function fetchPostDetail(id: string) {
-  const [postRes, commentsRes] = await Promise.all([
-    apiClient.get<Post>(`/posts/${id}`),
-    apiClient.get<Comment[]>(`/posts/${id}/comments`),
-  ])
-  return { post: postRes.data, comments: commentsRes.data }
-}
-```
-
-- `useParams<{ id: string }>()`(study5)로 URL의 동적 파라미터를 읽고, `useFetch`의 `deps`에 `id`를 넣어서 **다른 글로 이동하면 자동으로 다시 요청**되게 했습니다.
-- `Promise.all([...])`(study7의 확장): 게시글 본문과 댓글을 동시에 요청해서 기다리는 시간을 줄였습니다.
-
-### 4.5 로그인 → 헤더로 상태 전파 (`LoginPage.tsx`, `AppHeader.tsx`)
-
-```tsx
-// LoginPage.tsx
-function handleSubmit(event: FormEvent<HTMLFormElement>) {
-  event.preventDefault()
-  setSubmitted(true)
-  if (!isValid) return
-
-  login({ name: form.email.split('@')[0], email: form.email })
-  navigate(from, { replace: true })
-}
-```
-
-```tsx
-// AppHeader.tsx
-const user = useAuthStore((state) => state.user)
-// ...
-{user ? <span>👤 {user.name}님</span> : <Link to="/login">로그인</Link>}
-```
-
-- 폼 검증(study4)을 통과하면 `login(...)`을 호출하고, `location.state.from`(study6에서 배운 리다이렉트 목적지 기억)으로 원래 가려던 페이지로 돌아갑니다.
-- `AppHeader`는 `LoginPage`와 부모-자식 관계가 전혀 아니지만, 같은 `useAuthStore()`를 구독하므로 로그인 성공 즉시 상태가 반영됩니다 (study8/9).
-
-### 4.6 보호된 마이페이지 (`MyPage.tsx`)
-
-```tsx
-function MyPage() {
-  const user = useAuthStore((state) => state.user)
-  const favoritePostIds = useFavoritesStore((state) => state.favoritePostIds)
-
-  if (!user) return null // study10: User | null 타입이 강제하는 방어 코드
-
-  return (/* 사용자 정보 + 즐겨찾기한 게시글 목록 */)
-}
-```
-
-`/mypage` 라우트를 `<ProtectedRoute>`(study6/8/9)로 감쌌기 때문에, 로그인하지 않은 사용자는 이 컴포넌트에 도달하기도 전에 `/login`으로 리다이렉트됩니다.
-
-## 5. 실행 방법
-
-```bash
-cd TSX_study/project
-npm install
-npm run build   # tsc -b && vite build — 타입 에러 없이 통과하는지 먼저 확인
-npm run dev
-```
-
-## 6. 직접 확인해볼 시나리오
-
-1. **목록 페이지**: 검색창에 아무 단어나 입력 → 실시간으로 목록이 좁혀지는지
-2. **로그인 없이 즐겨찾기 시도**: 별표 클릭 → "로그인 후 이용할 수 있습니다" 알림이 뜨는지
-3. **로그인**: `/login`에서 "테스트 계정 채우기" → 로그인 → 원래 있던 페이지(또는 홈)로 자동 이동하고 헤더에 이름이 뜨는지
-4. **로그인 후 즐겨찾기**: 여러 게시글에 별표 클릭 → "즐겨찾기만 보기" 체크 → 즐겨찾기한 것만 보이는지
-5. **상세 페이지**: 카드 클릭 → 상세 페이지로 이동, 댓글 목록까지 보이는지, "목록으로"/"뒤로가기"로 돌아가는지
-6. **상세 페이지에서 즐겨찾기**: 상세 페이지에서도 즐겨찾기 토글이 목록 페이지와 상태를 공유하는지 (Zustand 확인)
-7. **페이지네이션**: "다음"/"이전"으로 페이지를 넘겨도 검색/필터 UI가 그대로 유지되는지
-8. **보호된 라우트**: 로그아웃 상태에서 "마이페이지" 클릭 → `/login`으로 튕기고, 로그인 후 다시 "마이페이지"에 들어가면 즐겨찾기 목록이 보이는지
-9. **로그아웃**: 헤더에서 로그아웃 → 즐겨찾기 버튼이 다시 막히는지
-
-## 7. 아쉬운 점 / 더 발전시킨다면 (다음 학습 방향)
-
-- **새로고침하면 로그인/즐겨찾기 상태가 날아감**: Zustand 상태가 메모리에만 있어서 새로고침하면 초기화됩니다. `zustand/middleware`의 `persist`를 쓰면 `localStorage`와 쉽게 연동할 수 있습니다.
-- **실제 로그인 서버가 없음**: JSONPlaceholder는 진짜 인증을 하지 않으므로, 이메일 형식과 비밀번호 길이만 확인합니다. 실전에서는 서버 인증, JWT 토큰 발급/저장, study10에서 다룬 CORS 설정이 필요합니다.
-- **검색이 현재 페이지 안에서만 동작**: 서버가 검색 쿼리 파라미터를 지원한다면, 클라이언트 필터링 대신 `fetchPosts({ page, limit, keyword })`처럼 서버에 검색을 위임하는 게 더 정확합니다.
-- **테스트 코드가 없음**: 지금까지는 빌드 성공(타입 검사)과 개발 서버 수동 확인으로만 검증했습니다. Vitest + React Testing Library로 자동화된 테스트를 작성하는 것이 다음 단계로 좋은 주제입니다.
+- [ ] 외부 배포(Vercel/Netlify/Render/VPS) + 배포 URL 기록, HTTPS, GitHub Actions 첫 실행·ghcr 푸시
+- [ ] `SPRING_PROFILES_ACTIVE=prod`로 실제 기동, Gradle 의존성 취약점 점검
+- [ ] 실제 Claude API 호출(키 설정 후), `usage`·비용 확인
+- [ ] tool use(챗봇 위젯), Ollama(`AI_PROVIDER=ollama`), Claude Code·앱에서 `board` MCP 도구 호출
+- [ ] MUI·shadcn/ui 적용·비교, react-hook-form
+- [ ] Lighthouse·Profiler 측정, 색 대비 점검
+- [ ] Refresh Token, OAuth, 비밀번호 재설정 (노션 "인증 · 인가"의 아직 안 한 것), JPA N+1 재현
+- [ ] Sentry 등 에러 수집, `requestId` 화면 표시
 
 ---
 
-여기까지가 이 저장소의 React 학습 로드맵입니다. `study0.md`부터 `studyFinal.md`까지 순서대로 따라오면, Vue 3와 비교하며 React의 핵심 개념(JSX, Hook, 라우팅, API 연동, 전역 상태, TypeScript)을 이론 → 개별 실습 → 종합 프로젝트 순으로 익힐 수 있도록 구성했습니다.
+## 부록: 노션 체크 항목 달성 현황
+
+노션 React 페이지 "실제 백엔드 연결 (조합 코스)"와 하위 페이지 항목입니다.
+
+| 노션 항목 | 문서 | 상태 |
+|---|---|---|
+| 대표 조합 1번(React + Spring Boot + PostgreSQL)의 Spring API에 연결, CORS 적용 | [study6](./study6.md) | ✅ `backend-spring`(PostgreSQL 16)에 연결, 프록시·CORS 직접 호출 모두 확인 |
+| 로그인 실제 연결, Zustand `persist`로 새로고침 유지 | [study7](./study7.md) | ✅ |
+| 401/403 처리를 axios 인터셉터 한 곳에 | [study7](./study7.md) | ✅ |
+| Vitest + React Testing Library 테스트 | [study9](./study9.md) | ✅ 83개 |
+| 외부 배포까지 | [study10](./study10.md), [study17](./study17.md) | ❌ 로컬 Docker(compose)까지 |
+| TanStack Query: 목록 조회·쿼리 키·로딩/에러/빈 상태·`useMutation`+invalidate·캐시/stale | [study11](./study11.md) | ✅ |
+| Redux Toolkit: `configureStore`·`createSlice`·`useSelector`, 로그인을 Redux slice로 | [study11](./study11.md) | ✅ 비교 구현(앱에는 연결하지 않음) |
+| MUI (목록·폼·모달), 테마, shadcn/ui | [study13](./study13.md) | ❌ 미구현 |
+| Tailwind 반응형, 다크 모드 | [study13](./study13.md) | ✅ |
+| 접근성 기본 (키보드·label·색 대비) | [study13](./study13.md) | ⚠️ 색 대비 미검사 |
+
+### "각 프레임워크 응용하기" 조합마다 체크할 것 (React + Spring Boot 기준)
+
+| 항목 | 상태 |
+|---|---|
+| 백엔드가 공통 스펙 8절 "고칠 것"을 반영했다 | ✅ 새로 만든 `backend-spring`이 처음부터 반영 (기존 `Spring_Boot_Study`는 수정하지 않음) |
+| 프론트가 JSONPlaceholder가 아니라 이 백엔드에 붙는다 (CORS 또는 프록시) | ✅ 프록시·CORS 직접 호출 둘 다 확인 |
+| 새로고침해도 로그인이 유지된다 | ✅ |
+| SQLite가 아니라 실제 DB를 쓴다 (compose) | ✅ PostgreSQL 16 (compose `db`, 테스트는 Testcontainers) |
+| 남의 글 수정·삭제 403, 비로그인 작성 401을 테스트로 확인했다 | ✅ `PostApiTest`·`CommentApiTest`·E2E |
+| 외부에서 접속 가능한 URL이 있다 | ❌ |

@@ -1,0 +1,14 @@
+@import 'tailwindcss';
+
+/* 다크 모드: <html> 의 .dark 클래스로 전환한다 (헤더의 테마 토글이 붙임, 기본은 OS 설정을 따름) (study13). */
+@custom-variant dark (&:where(.dark, .dark *));
+
+body {
+  @apply bg-slate-50 text-slate-900 antialiased dark:bg-slate-900 dark:text-slate-100;
+}
+
+/* 키보드 사용자를 위한 포커스 표시 (접근성) */
+:focus-visible {
+  outline: 2px solid #2563eb;
+  outline-offset: 2px;
+}
