@@ -1,182 +1,164 @@
-# study4 — 콜백 props(자식→부모 통신) & 폼 상태(Controlled Component) 실습
+# study4 — 라우팅·요청 처리
 
-컴포넌트를 잘게 쪼갤 때 반드시 필요한 "자식이 부모에게 알리는 방법"과, 실무에서 거의 항상 등장하는 "폼 상태 관리 + 검증"을 실습합니다.
+> 🎯 **목표**: React Router로 URL별 화면(목록→상세, 중첩 라우트)을 만들고, "URL 입력 → 라우터 매칭 → 컴포넌트 렌더 → API 요청 → 화면 갱신" 흐름을 설명할 수 있다.
 
-```
-- [x] Vite + React + JS 프로젝트 생성
-- [x] 함수 컴포넌트, props, children
-- [x] useState / useEffect / useRef
-- [x] 리스트 렌더링과 key
-- [ ] React Router 중첩 라우팅                        (study5, study6 예정)
-- [x] 폼 상태 다루기                                  (API 연동은 study7 예정)
-- [ ] Context 또는 Zustand로 전역 상태 (로그인)
-- [ ] 백엔드와 CORS 연동
-```
-
-대응하는 실습 프로젝트: [`JSX_study/demo`](./JSX_study/demo) — `LikeableFruitList.jsx`, `LoginFormPractice.jsx` 추가
+- 이전: [study3.md](./study3.md) — 데이터 다루기
+- 다음: [study5.md](./study5.md) — 폼·입력·검증
+- 실습 코드: [`JSX_study/demo/src/App.jsx`](./JSX_study/demo/src/App.jsx), [`pages/`](./JSX_study/demo/src/pages)
 
 ---
 
-## 1. 콜백 props — Vue의 `emit`을 React 방식으로
+## 📖 이론
 
-study0 5장에서 "React의 emit은 콜백 함수를 props로 내려주는 관례일 뿐"이라고 배웠습니다. 이번엔 실제로 두 단계(선택/좋아요)를 구현했습니다.
+### 4.1 SPA에서 "요청·응답"은 두 갈래
+
+서버 렌더링 프레임워크와 달리 React SPA는 **페이지 요청이 한 번**(`index.html`)이고, 이후 URL 이동은 브라우저 주소만 바꾸고 JS가 화면을 교체합니다.
+
+```text
+① 브라우저가 /fruits/1 요청 → 서버가 항상 index.html 반환 (SPA fallback)
+② main.jsx 실행 → <BrowserRouter>가 현재 URL 확인
+③ <Routes>가 path와 매칭되는 <Route> 선택 → 해당 element(컴포넌트) 렌더
+④ 컴포넌트가 필요하면 API 요청(axios) → 응답으로 상태 갱신 → 화면 다시 그림
+```
+
+- 화면 이동 = `<Link to="…">` / `navigate()` → **서버 요청 없음**
+- 데이터 = API 호출 (study6)
+
+### 4.2 핵심 API
+
+| API | 용도 |
+|---|---|
+| `BrowserRouter` | History API 기반 라우터 (주소창에 `#` 없음) |
+| `Routes` / `Route` | URL → 컴포넌트 매핑 |
+| `Link` / `NavLink` | 새로고침 없는 이동 / 현재 경로면 active 표시 |
+| `useParams` | `/fruits/:id`의 `id` 꺼내기 (항상 **문자열**) |
+| `useNavigate` | 코드로 이동 (`navigate('/')`, `navigate(-1)`) |
+| `Outlet` | 중첩 라우트의 자식이 그려지는 자리 |
+| `Navigate` | 렌더링 중 즉시 리다이렉트 (보호된 라우트에 사용 → study7) |
+| `useLocation` | 현재 위치·`state` 읽기 |
+
+### 4.3 중첩 라우트
+
+부모 라우트가 **공통 레이아웃**(제목, 탭)을, 자식이 **내용**을 담당합니다. 자식은 부모의 `<Outlet />` 자리에 그려집니다.
+
+---
+
+## 🛠️ 실기
+
+### 1. 라우트 정의 — [`App.jsx`](./JSX_study/demo/src/App.jsx)
 
 ```jsx
-function FruitLikeCard({ fruit, liked, onSelect, onToggleLike }) {
-  function handleLikeClick(event) {
-    event.stopPropagation()
-    onToggleLike(fruit.id)
-  }
+<BrowserRouter>
+  <div className="app">
+    <header> ... <nav className="actions">
+      <Link to="/">홈</Link>
+      <Link to="/fruits">과일 카탈로그</Link>
+      ...
+    </nav></header>
+    <main>
+      <Routes>
+        <Route path="/" element={<HomeView />} />
+        <Route path="/fruits" element={<FruitCatalogPage />} />
 
-  return (
-    <li className="fruit-card" onClick={() => onSelect(fruit.id)}>
-      <span className="name">{fruit.name}</span>
-      <button className={liked ? 'active' : ''} onClick={handleLikeClick}>
-        {liked ? '★ 좋아요 취소' : '☆ 좋아요'}
-      </button>
-    </li>
-  )
-}
+        <Route path="/fruits/:id" element={<FruitDetailLayout />}>
+          <Route index element={<FruitOverview />} />
+          <Route path="reviews" element={<FruitReviews />} />
+        </Route>
+
+        <Route path="/login" element={<LoginPage />} />
+        <Route path="/posts" element={<PostListPage />} />
+        <Route path="/mypage" element={<ProtectedRoute><MyPage /></ProtectedRoute>} />
+      </Routes>
+    </main>
+  </div>
+</BrowserRouter>
 ```
+
+| 줄(원본) | 설명 |
+|---|---|
+| 17 | `BrowserRouter`는 앱 전체를 감싸야 `Link`·`useNavigate`가 동작 |
+| 24~28 | 모든 페이지에서 보이는 헤더·네비는 `Routes` **밖**에 두면 라우트가 바뀌어도 유지됨 |
+| 34~35 | `path="/"`, `path="/fruits"` 단순 매핑 |
+| 38~41 | **중첩 라우트**. `/fruits/1` → `index`(개요), `/fruits/1/reviews` → 리뷰. 자식 `path`는 상대 경로 |
+| 45~52 | `ProtectedRoute`로 감싼 라우트 (로그인 필요, → study7) |
+
+### 2. 목록 → 상세 — [`FruitCatalogPage.jsx`](./JSX_study/demo/src/pages/FruitCatalogPage.jsx)
 
 ```jsx
-function LikeableFruitList() {
-  const [likedIds, setLikedIds] = useState([])
-  const [lastSelected, setLastSelected] = useState(null)
-
-  function handleToggleLike(id) {
-    setLikedIds((prev) =>
-      prev.includes(id) ? prev.filter((likedId) => likedId !== id) : [...prev, id],
-    )
-  }
-
-  function handleSelect(id) {
-    setLastSelected(id)
-  }
-
-  return (
-    // ...
-    <FruitLikeCard
-      fruit={fruit}
-      liked={likedIds.includes(fruit.id)}
-      onSelect={handleSelect}
-      onToggleLike={handleToggleLike}
-    />
-  )
-}
+<Link to={`/fruits/${fruit.id}`}>{fruit.name}</Link>
 ```
 
-### 1.1 이름 짓는 관례 — `on케밥Something`
+템플릿 리터럴로 URL을 조립합니다. `<a href>`를 쓰면 전체 새로고침이 일어나므로 내부 이동은 항상 `Link`.
 
-- 부모가 자식에게 내려주는 콜백 props는 관례상 **`on` + 동사**로 짓습니다 (`onSelect`, `onToggleLike`, `onLike` 등).
-- 자식 내부에서 그 콜백을 부르는 함수는 관례상 **`handle` + 동사**로 짓습니다 (`handleLikeClick`).
-- Vue의 `defineEmits(['like'])` + `emit('like', payload)`와 비교하면, React는 "이벤트 이름을 선언"하는 절차 없이 그냥 **함수를 하나 더 받는 것**뿐이라 더 단순하지만, 그만큼 이름 규칙을 팀 안에서 통일해두는 게 중요합니다.
-
-### 1.2 "실제 상태 변경은 부모가 결정한다"
-
-`FruitLikeCard`(자식)는 `likedIds`라는 상태 자체를 모릅니다. 그냥 `onToggleLike(fruit.id)`를 호출해서 "이 id를 토글해줘"라고 **요청만** 합니다. 실제로 배열에서 추가/제거하는 로직은 전부 `LikeableFruitList`(부모)의 `handleToggleLike`에 있습니다.
-
-- 이 원칙 덕분에 `likedIds` 상태가 어디서, 어떻게 바뀌는지 **한 곳(부모)만 보면 알 수 있습니다.**
-- study0 5장에서 다룬 "단방향 데이터 흐름"이 콜백 props까지 포함해서 완성되는 지점입니다: **데이터(liked)는 내려가고(prop), 의도(toggle 해달라는 요청)는 콜백으로 올라간다.**
-
-### 1.3 `event.stopPropagation()` — 이벤트 버블링 차단
-
-카드(`<li>`)에도 `onClick`이 있고, 그 안의 버튼에도 `onClick`이 있습니다. 버튼을 클릭하면 브라우저는 기본적으로 이벤트를 부모 요소로 **전파(버블링)**시키므로, 아무 조치가 없으면 좋아요 버튼을 눌러도 `onSelect`(카드 선택)까지 같이 실행됩니다.
+### 3. 중첩 부모 — [`FruitDetailLayout.jsx`](./JSX_study/demo/src/pages/FruitDetailLayout.jsx)
 
 ```jsx
-function handleLikeClick(event) {
-  event.stopPropagation() // 여기서 버블링을 끊음
-  onToggleLike(fruit.id)
-}
+const { id } = useParams()
+const fruit = fruitCatalog.find((f) => f.id === Number(id))
+if (!fruit) { return (<section ...><h2>존재하지 않는 과일입니다 (id: {id})</h2> ... ) }
+
+<NavLink to="." end className={({ isActive }) => (isActive ? 'active' : '')}>개요</NavLink>
+<NavLink to="reviews" className={({ isActive }) => (isActive ? 'active' : '')}>리뷰</NavLink>
+<Outlet context={{ fruit }} />
 ```
 
-이 패턴은 실무에서 "카드 전체는 클릭 시 상세 페이지로 이동하지만, 카드 안의 즐겨찾기 버튼은 페이지 이동 없이 그 자체로만 동작해야 하는" 경우(예: 게시글 카드 + 즐겨찾기 버튼)에 항상 등장합니다. studyFinal에서 라우팅과 결합해 다시 사용합니다.
+| 줄(원본) | 설명 |
+|---|---|
+| 7~8 | `useParams`의 값은 **문자열**이라 `Number(id)`로 변환 후 비교 (`===` 타입까지 비교하므로 필수) |
+| 10~17 | 없는 id는 에러가 아니라 **"없음" 화면**을 명시 (study0 이론의 빈 상태 원칙) |
+| 26 | `to="."` + `end` : `end`가 없으면 `/fruits/1`이 `/fruits/1/reviews`에서도 active로 보임 |
+| 35 | `Outlet context`로 자식에게 값을 전달 |
 
-## 2. Controlled Component — Vue의 `v-model`을 직접 조립
+자식 쪽 [`FruitOverview.jsx`](./JSX_study/demo/src/pages/FruitOverview.jsx): `const { fruit } = useOutletContext()` 로 받습니다. props 전달과 달리 **라우트 트리를 통해** 전달됩니다.
 
-### 2.1 왜 "직접 조립"해야 하는가
+### 4. 요청·응답 흐름 확인 — 개발자 도구
 
-Vue는 `v-model="email"` 한 줄로 "값 표시 + 입력 시 갱신"을 자동으로 처리했습니다. study0 2.2절에서 짚었듯 **React에는 이런 양방향 바인딩 문법이 없습니다.** 대신 `value`와 `onChange`를 직접 연결합니다.
+1. 브라우저 F12 → **Network** 탭 → `Doc`(문서)와 `Fetch/XHR` 필터를 번갈아 선택
+2. 주소창에 `http://localhost:5173/fruits/2` 를 직접 입력해 Enter → `localhost` 문서 요청 1건(= `index.html`)
+3. 화면의 `Link`를 눌러 `/fruits/3`으로 이동 → **문서 요청 없음**, URL만 변경 (SPA 이동)
+4. `게시글 목록 (API)`(`/posts`)로 이동 → `Fetch/XHR`에 `jsonplaceholder.typicode.com/posts?_page=…` 요청이 표시됨
+
+### 5. 404(없는 경로) 처리 — 직접 추가해 볼 것
 
 ```jsx
-<input
-  type="email"
-  name="email"
-  value={form.email}
-  onChange={handleChange}
-/>
+// Routes 맨 아래에 추가 (설명용 코드)
+<Route path="*" element={<p>페이지를 찾을 수 없습니다. <Link to="/">홈으로</Link></p>} />
 ```
 
-```jsx
-function handleChange(event) {
-  const { name, value } = event.target
-  setForm((prev) => ({ ...prev, [name]: value }))
-}
-```
+`*`는 위에서 매칭되지 않은 모든 경로를 받습니다. 순서에 상관없이 **가장 구체적인 경로가 우선**합니다.
 
-- `value={form.email}`: input에 표시될 값을 **React state가 결정**합니다 (input이 아니라 React가 "진짜 값"을 갖고 있다는 뜻 — 그래서 "Controlled(제어되는)" Component라고 부릅니다).
-- `onChange={handleChange}`: 사용자가 타이핑할 때마다 `setForm`으로 state를 갱신합니다.
-- `[name]: value`: **계산된 속성명(computed property name)** 문법으로, `name="email"`이면 `{ email: value }`가, `name="password"`면 `{ password: value }`가 되어 핸들러 함수 하나로 여러 input을 처리할 수 있습니다.
-- **주의**: `value`만 넣고 `onChange`를 빼먹으면 input에 아무것도 입력할 수 없는 "읽기 전용" 필드가 되어버립니다 (React가 계속 이전 값으로 되돌리기 때문) — 초보자가 자주 만나는 에러(`You provided a value prop to a form field without an onChange handler`)입니다.
+### 6. 새로고침하면 404가 나는 이유 (배포 시 주의)
 
-### 2.2 클라이언트 사이드 검증 — "제출 시" + "필드를 벗어났을 때"
+개발 서버(`vite`)는 자동으로 `index.html`을 돌려주지만, 일반 정적 서버에서는 `/fruits/1`에 해당하는 **실제 파일이 없어** 404가 납니다. 해결은 "없는 경로는 `index.html`로 보내기"(SPA fallback) — study10, study17에서 Nginx `try_files`, Netlify `_redirects`로 설정합니다.
 
-```jsx
-function validate({ email, password }) {
-  const errors = {}
-  if (!email.includes('@')) errors.email = '올바른 이메일 형식이 아닙니다.'
-  if (password.length < 8) errors.password = '비밀번호는 8자 이상이어야 합니다.'
-  return errors
-}
-```
+---
 
-```jsx
-function shouldShowError(field) {
-  return (touched[field] || submitted) && errors[field]
-}
-```
+## 🐞 오류 노트
 
-- `errors`는 **매 렌더링마다 새로 계산되는 파생 값**입니다 (Vue의 `computed`와 유사한 역할이지만, React는 캐싱 없이 렌더링마다 다시 계산하고, 계산 비용이 크면 study6 이후에 배울 `useMemo`로 최적화합니다).
-- `touched`: 사용자가 한 번이라도 그 필드에서 벗어난 적(`onBlur`) 있는지 기록. 페이지에 들어오자마자 모든 칸에 빨간 에러가 뜨는 걸 막기 위한 UX 장치입니다.
-- `submitted`: 제출 버튼을 눌렀다면, 아직 `touched`되지 않은 필드라도 에러를 보여줍니다.
-- Vue study5에서 만든 것과 정확히 같은 패턴(touched/errors/shouldShowError)이며, 검증 로직 자체는 프레임워크와 무관한 순수 JS라는 것도 확인할 수 있습니다.
+| 증상 | 원인 | 해결 |
+|---|---|---|
+| `useNavigate() may be used only in the context of a <Router>` | `BrowserRouter` 밖에서 라우터 훅 사용 | `BrowserRouter`를 더 바깥으로 |
+| 상세 페이지에서 항상 "없음" | `useParams`는 문자열인데 숫자와 `===` 비교 | `Number(id)` 변환 |
+| 개요 탭이 항상 active | `NavLink`에 `end` 없음 | `<NavLink to="." end>` |
+| 자식 라우트가 안 보임 | 부모에 `<Outlet />` 없음 | 부모 JSX에 `Outlet` 추가 |
+| 링크 클릭 시 페이지 전체가 깜빡임 | `<a href>` 사용 | `<Link to>` |
+| 새로고침/직접 입력 시 배포 환경에서만 404 | SPA fallback 미설정 | 서버에서 `index.html`로 rewrite |
+| `Absolute route path ... nested under path ...` 경고 | 자식 `path`를 `/`로 시작 | 자식은 상대 경로(`reviews`) |
 
-### 2.3 폼 제출 — `preventDefault`
+---
 
-```jsx
-function handleSubmit(event) {
-  event.preventDefault() // 브라우저 기본 동작(페이지 새로고침)을 막음
-  setSubmitted(true)
-  if (!isValid) return
-  // ...
-}
-```
+## ☐ 체크리스트
 
-`<form onSubmit={handleSubmit}>`에서 `event.preventDefault()`를 호출하지 않으면, 브라우저가 폼을 실제로 서버에 제출하며 페이지가 새로고침되어 SPA의 상태가 전부 날아갑니다. Vue의 `@submit.prevent`가 자동으로 해주던 것을 React에서는 **직접 호출**해야 합니다.
+- [ ] 주소 변경(SPA 이동)과 데이터 요청(API)이 서로 다른 요청임을 Network 탭으로 확인했다
+- [ ] `Routes`/`Route`/`Link`/`useParams`로 목록→상세 이동을 구현했다
+- [ ] `useParams` 값이 문자열이라 변환이 필요함을 안다
+- [ ] 중첩 라우트(`Outlet`, `index`, 상대 경로)를 구현했다
+- [ ] `NavLink`의 `end`가 필요한 이유를 설명할 수 있다
+- [ ] 없는 경로(`path="*"`)와 없는 id를 각각 화면으로 처리했다
+- [ ] 정적 서버에서 새로고침 404가 나는 이유와 해결 방향(SPA fallback)을 안다
 
-## 3. 실행 확인
+---
 
-```bash
-cd JSX_study/demo
-npm run dev
-```
+## ➡️ 다음 단계 연결
 
-**콜백 props 실습**
-
-- 과일 카드를 클릭 → "마지막으로 선택한 카드" 문구가 바뀌는지
-- 좋아요 버튼 클릭 → "선택됨" 문구는 그대로인데 좋아요 개수만 바뀌는지 (`stopPropagation` 확인)
-- 좋아요를 다시 눌러 취소 → 개수가 다시 줄어드는지
-
-**로그인 폼 실습**
-
-- 아무것도 입력하지 않고 "로그인" 클릭 → 이메일/비밀번호 에러 메시지가 뜨는지
-- 이메일 칸에 `@` 없이 입력 후 다른 칸으로 이동(blur) → 바로 에러가 뜨는지 (`touched` 확인)
-- 올바른 이메일 + 8자 이상 비밀번호 입력 후 제출 → "로그인되었습니다" 화면으로 전환되는지
-- "로그아웃" 클릭 → 다시 빈 폼으로 돌아오는지
-
-`npm run build`로 프로덕션 빌드까지 에러 없이 되는 것을 확인했습니다.
-
-## 4. 다음 단계 (study5 예정)
-
-- `react-router-dom` 설치, 목록 → 상세 페이지 기본 라우팅
-- `useParams`로 URL의 동적 파라미터 읽기, `Link`로 페이지 이동
+[study5](./study5.md)에서는 **사용자 입력(폼)** 을 받아 상태와 연결하고, 유효성 검사 결과를 화면에 보여 줍니다.
