@@ -1,177 +1,218 @@
-# study8 (고급 기술 구현 3) — Context API로 전역 로그인 상태 관리
+# study8 — 구조화·재사용: 폴더 구조·공통 모듈·환경 변수
 
-study6에서 `localStorage` + 함수 3개(`isLoggedIn`, `login`, `logout`)로 로그인 여부만 흉내냈습니다. 이번엔 React 내장 도구인 **Context API**로 정식 전환해서, 여러 컴포넌트가 하나의 로그인 상태(사용자 정보 포함)를 실시간으로 공유하게 만듭니다.
+> 🎯 **목표**: 기업형 폴더 구조로 코드를 나누고, 공통 모듈(api·훅·스토어·타입)을 재사용하며, 개발/운영 환경 설정을 환경 변수로 분리한다.
 
-```
-- [x] Vite + React + JS 프로젝트 생성
-- [x] 함수 컴포넌트, props, children
-- [x] useState / useEffect / useRef
-- [x] 리스트 렌더링과 key
-- [x] React Router 중첩 라우팅
-- [x] 폼 상태 다루기 + API 연동 (axios / fetch)
-- [x] Context로 전역 상태 (로그인)                     (Zustand 비교는 study9)
-- [ ] 백엔드와 CORS 연동
-```
-
-대응하는 실습 프로젝트: [`JSX_study/demo`](./JSX_study/demo)
+- 이전: [study7.md](./study7.md) — 인증·보안 기초
+- 다음: [study9.md](./study9.md) — 테스트·디버깅
+- 실습 코드: [`TSX_study/project/src`](./TSX_study/project/src) (구조), [`JSX_study/project/src/context`](./JSX_study/project/src/context) (Context 방식)
 
 ---
 
-## 1. Props Drilling 복습 — 왜 전역 상태가 필요한가
+## 📖 이론
 
-study0 7장, Vue study7에서 다룬 것과 같은 문제입니다: 로그인 여부는 헤더(`AuthStatus`), 로그인 폼(`LoginPage`), 마이페이지(`MyPage`)처럼 **부모-자식 관계가 아닌 컴포넌트들**이 동시에 알아야 합니다. props만으로 전달하려면 관계없는 중간 컴포넌트들까지 계속 props를 전달만 하는 "props drilling"이 생깁니다.
+### 8.1 기업형으로 써 볼 구조 (노션 원칙)
 
-## 2. Context 만들기 — `createContext` / `Provider`
+- `features/` **또는** `pages/` + `components/` + `hooks/` + `api/` 로 나눈다.
+- **페이지 단위로 데이터 패칭 위치**를 정한다.
+- 에러/로딩/빈 상태를 UI에 명시한다.
+
+### 8.2 계층별 책임
+
+| 폴더 | 책임 | 알아도 되는 것 |
+|---|---|---|
+| `api/` | HTTP 호출, URL, 응답 매핑 | axios, 백엔드 주소 (**유일하게** 알아야 함) |
+| `hooks/` | 재사용 가능한 로직(`useFetch`) | 상태·effect |
+| `store/` | 전역 상태 (Zustand) | 도메인 상태 |
+| `components/` | 재사용 UI 조각 | props |
+| `pages/` | 라우트 단위 화면, 데이터 패칭 | api·hooks·store 조합 |
+| `types.ts` | 공유 타입 | — |
+
+규칙: **의존 방향은 `pages → components/hooks/store → api`**. 하위가 상위를 import하지 않습니다.
+
+### 8.3 전역 상태 선택 — Context vs Zustand
+
+| | Context | Zustand |
+|---|---|---|
+| Provider | 필요 (`<AuthProvider>`) | 불필요 |
+| 구독 단위 | value가 바뀌면 **구독한 모든 컴포넌트**가 리렌더 | 선택자(`selector`)로 **필요한 값만** 구독 |
+| 컴포넌트 밖에서 접근 | 불가 | `getState()` 가능 (study7 인터셉터) |
+| 적합 | 테마·언어처럼 드물게 바뀌는 값 | 로그인·장바구니 등 자주 쓰는 상태 |
+
+### 8.4 환경 변수 (Vite)
+
+| 파일 | 용도 |
+|---|---|
+| `.env` | 모든 모드 공통 |
+| `.env.development` | `npm run dev` |
+| `.env.production` | `npm run build` |
+| `.env.local` | 내 PC 전용 (git 제외) |
+
+- 브라우저에 노출되는 값은 **반드시 `VITE_` 접두어**. 코드에서는 `import.meta.env.VITE_…`.
+- ⚠️ **빌드 때 값이 코드에 박힙니다.** 즉 **비밀(API 키, DB 비밀번호)은 절대 `VITE_`에 넣지 않습니다.** 브라우저에서 누구나 읽을 수 있습니다. (노션: "비밀은 코드·이미지에 없다. `.env.example`에 키 이름만 남긴다.")
+
+---
+
+## 🛠️ 실기
+
+### 1. 현재 저장소의 구조 — [`TSX_study/project/src`](./TSX_study/project/src)
+
+```text
+src/
+├─ api/          client.ts, posts.ts          ← axios 인스턴스 + 호출 함수
+├─ components/   AppHeader.tsx, PostCard.tsx, ProtectedRoute.tsx
+├─ hooks/        useFetch.ts                  ← 재사용 훅
+├─ pages/        PostListPage.tsx, PostDetailPage.tsx, LoginPage.tsx, MyPage.tsx
+├─ store/        authStore.ts, favoritesStore.ts
+├─ types.ts                                   ← Post, Comment, User
+├─ App.tsx                                    ← 라우트 정의
+└─ main.tsx
+```
+
+### 2. 구조가 지켜지는지 코드로 확인
+
+[`PostListPage.tsx:21-24`](./TSX_study/project/src/pages/PostListPage.tsx)
+
+```tsx
+const { data: posts, loading, error } = useFetch<Post[]>(
+  () => fetchPosts({ page, limit: LIMIT }),
+  [page],
+)
+```
+
+- 페이지가 `hooks/useFetch` + `api/fetchPosts`를 **조합**합니다. 페이지는 axios도, URL도 모릅니다.
+- [`AppHeader.tsx:7-8`](./TSX_study/project/src/components/AppHeader.tsx): 헤더는 로그인·페이지와 **부모-자식 관계가 아닌데도** 같은 `authStore`를 구독해 즉시 갱신됩니다.
+- [`favoritesStore.ts:9-10`](./TSX_study/project/src/store/favoritesStore.ts) 주석: "로그인 여부"와 "즐겨찾기 목록"은 **바뀌는 이유가 달라 스토어를 분리**. 스토어를 하나로 몰지 않는 것이 `store/` 폴더가 커질 때의 기본 원칙.
+
+### 3. Context 방식과 비교 — [`JSX_study/project`](./JSX_study/project/src/context)
 
 ```jsx
 // context/AuthContext.jsx
-import { createContext, useContext, useState } from 'react'
-
-const AuthContext = createContext(null)
-
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null)
-
-  function login(userData) {
-    setUser(userData)
-  }
-  function logout() {
-    setUser(null)
-  }
-
-  const value = { user, isLoggedIn: user !== null, login, logout }
-
-  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
+  function login(nextUser) { setUser(nextUser) }
+  function logout() { setUser(null) }
+  return <AuthContext.Provider value={{ user, login, logout }}>{children}</AuthContext.Provider>
 }
 
+// hooks/useAuth.js
 export function useAuth() {
-  const ctx = useContext(AuthContext)
-  if (!ctx) {
-    throw new Error('useAuth는 <AuthProvider> 내부에서만 사용할 수 있습니다.')
-  }
-  return ctx
+  const value = useContext(AuthContext)
+  if (!value) throw new Error('useAuth는 AuthProvider 안에서만 쓸 수 있습니다.')
+  return value
 }
 ```
 
-### 2.1 세 조각으로 이해하기
+| 포인트 | 설명 |
+|---|---|
+| 파일 분리 | `createContext`(`authContext.js`)와 Provider(`AuthContext.jsx`)를 나눈 이유: 컴포넌트 파일에서는 컴포넌트만 export해야 HMR/린트(`react/only-export-components`)가 안정적 |
+| `useAuth` 가드 | Provider 밖에서 쓰면 즉시 명확한 에러 |
+| `value={{ … }}` | 매 렌더링마다 새 객체 → 구독자가 불필요하게 리렌더될 수 있음(study12에서 `useMemo`로 완화) |
 
-| 조각 | 역할 | Vue(Pinia) 대응 |
-|---|---|---|
-| `createContext(null)` | "이런 종류의 전역 상태 상자가 있다"를 선언 | `defineStore('auth', ...)` |
-| `<AuthContext.Provider value={...}>` | 실제 값(`value`)을 이 태그로 감싼 하위 트리 전체에 공급 | (Pinia는 `app.use(pinia)`로 앱 전체에 한 번만 설치, 별도 Provider 불필요) |
-| `useContext(AuthContext)` | 하위 트리 어디서든 그 값을 꺼내 쓰기 | `useAuthStore()` |
+같은 로그인 상태를 Zustand로 만든 것이 [`JSX_study/demo/src/store/authStore.js`](./JSX_study/demo/src/store/authStore.js)입니다. Provider 없이 같은 기능이 9줄로 끝납니다.
 
-- **Provider로 감싼 범위 안에서만** `useContext`가 값을 받을 수 있습니다. 이 실습에서는 `<AuthProvider>`가 `<BrowserRouter>`까지 포함해서 앱 전체를 감쌌기 때문에, 모든 페이지가 `useAuth()`를 쓸 수 있습니다.
-- **`useAuth`로 한 번 더 감싼 이유**: 컴포넌트마다 `useContext(AuthContext)`를 직접 부르게 하면, Provider 없이 실수로 쓰였을 때 `ctx`가 `null`이라 "어디서" 잘못됐는지 알기 어려운 에러가 납니다. 커스텀 훅 안에서 미리 체크하면 에러 메시지가 훨씬 명확해집니다 — 이것도 실무에서 흔한 관례입니다.
-
-## 3. App 전체에 Provider 씌우기
-
-```jsx
-// App.jsx
-function App() {
-  return (
-    <AuthProvider>
-      <BrowserRouter>
-        <div className="app">
-          <header>
-            <AuthStatus />
-            {/* ...nav... */}
-          </header>
-          <main>
-            <Routes>...</Routes>
-          </main>
-        </div>
-      </BrowserRouter>
-    </AuthProvider>
-  )
-}
-```
-
-`AuthProvider`가 `BrowserRouter`보다 바깥에 있어야, 라우팅으로 어떤 페이지를 보여주든 전부 같은 로그인 상태를 공유합니다.
-
-## 4. 서로 다른 컴포넌트가 같은 상태를 구독
-
-### 4.1 보호된 라우트 — study6 코드를 그대로 교체
-
-```jsx
-// components/ProtectedRoute.jsx
-function ProtectedRoute({ children }) {
-  const { isLoggedIn } = useAuth()   // ← 유일하게 바뀐 줄 (기존엔 isLoggedIn() 함수 호출)
-  const location = useLocation()
-
-  if (!isLoggedIn) {
-    return <Navigate to="/login" replace state={{ from: location }} />
-  }
-  return children
-}
-```
-
-study6에서 "`ProtectedRoute`가 `isLoggedIn()`이라는 인터페이스만 알면 되도록 격리해뒀다"고 설명했던 부분이 여기서 그대로 확인됩니다 — **로직 흐름은 전혀 안 바뀌고, 로그인 상태를 어디서 가져오는지만 바뀌었습니다.**
-
-### 4.2 로그인 폼
-
-```jsx
-function LoginPage() {
-  const { login } = useAuth()
-  // ...
-  function handleLogin() {
-    login({ name: '테스트유저', email: 'test@example.com' })
-    navigate(from, { replace: true })
-  }
-}
-```
-
-### 4.3 마이페이지
-
-```jsx
-function MyPage() {
-  const { user, logout } = useAuth()
-  return (
-    <>
-      <p>{user.name}님, 환영합니다. ({user.email})</p>
-      <button onClick={() => { logout(); navigate('/') }}>로그아웃</button>
-    </>
-  )
-}
-```
-
-### 4.4 헤더 — 부모/자식 관계가 전혀 없는 컴포넌트
-
-```jsx
-// components/AuthStatus.jsx
-function AuthStatus() {
-  const { isLoggedIn, user } = useAuth()
-  return <p>{isLoggedIn ? `👤 ${user.name}님 로그인됨` : '로그인하지 않은 상태'}</p>
-}
-```
-
-**핵심**: `LoginPage`, `MyPage`, `AuthStatus`는 서로 부모-자식이 아닌 완전히 다른 컴포넌트지만, 셋 다 `useAuth()`를 호출하면 **같은 Context 값**을 받습니다. 그래서 로그인 폼에서 로그인에 성공하는 순간, props나 콜백 없이도 헤더의 `AuthStatus`가 즉시 "로그인됨"으로 바뀝니다.
-
-## 5. Context의 한계 — study9(Zustand) 예고
-
-이번 실습에서는 문제가 없어 보이지만, Context에는 실무에서 자주 지적되는 특성이 있습니다.
-
-> **`value`가 바뀌면, 그 Context를 구독(`useContext`)하는 모든 컴포넌트가 리렌더링됩니다.** 상태를 세분화하지 않고 하나의 Context에 여러 값을 몰아넣으면, 일부 값만 바뀌어도 관련 없는 컴포넌트까지 리렌더링될 수 있습니다.
-
-지금은 `user` 하나뿐이라 문제가 안 보이지만, 앱이 커져서 Context 하나에 로그인 정보 + 테마 + 알림 등 여러 전역 상태가 섞이면 이 특성이 성능 문제로 이어질 수 있습니다. study9에서 **Zustand**로 같은 기능을 다시 구현하며 이 차이를 비교합니다.
-
-## 6. 실행 확인
+### 4. 환경 변수 분리 (설명용 예제)
 
 ```bash
-cd JSX_study/demo
-npm run dev
+# .env.development
+VITE_API_BASE_URL=http://localhost:8080
+
+# .env.production
+VITE_API_BASE_URL=/api            # 같은 도메인 + Nginx 프록시 (study17)
+
+# .env.example   ← git에 올리는 것 (키 이름만)
+VITE_API_BASE_URL=
 ```
 
-- 로그아웃 상태에서 헤더에 "로그인하지 않은 상태"가 보이는지
-- "마이페이지" 클릭 → `/login`으로 리다이렉트되는지 (study6과 동일한 흐름, 내부 구현만 Context로 교체됨)
-- "테스트 계정으로 로그인" 클릭 → `/mypage`로 이동하며 "테스트유저님, 환영합니다"가 보이는지
-- **헤더를 확인** → 로그인 폼을 직접 건드리지 않았는데도 "👤 테스트유저님 로그인됨"으로 바뀌어 있는지 (Context 공유 확인)
-- "로그아웃" 클릭 → 헤더도 즉시 "로그인하지 않은 상태"로 돌아오는지
-- 새로고침하면 로그인 상태가 초기화되는지 확인 (Context는 메모리에만 있으므로 당연한 결과 — 실무에서는 localStorage/서버 세션과 연동해서 해결하며, 이 저장소에서는 studyFinal에서 다시 다룹니다)
+`.gitignore`에는 이미 `*.local`이 있습니다 ([`TSX_study/project/.gitignore`](./TSX_study/project/.gitignore)). 비밀이 들어갈 수 있는 `.env.local`은 커밋되지 않습니다.
 
-`npm run build`까지 에러 없이 되는 것을 확인했습니다.
+```ts
+// src/config.ts — 환경 변수는 한 파일에서만 읽는다
+const required = (key: string): string => {
+  const v = import.meta.env[key] as string | undefined
+  if (!v) throw new Error(`환경 변수 ${key}가 설정되지 않았습니다.`)
+  return v
+}
+export const config = {
+  apiBaseUrl: required('VITE_API_BASE_URL'),
+  isProd: import.meta.env.PROD,
+}
+```
 
-## 7. 다음 단계 (study9 예정 — 고급 기술 구현 4)
+```ts
+// api/client.ts
+import { config } from '../config'
+export const apiClient = axios.create({ baseURL: config.apiBaseUrl, timeout: 5000 })
+```
 
-- 같은 로그인 기능을 **Zustand**로 다시 구현
-- Context와 Zustand의 리렌더링 차이를 직접 비교
+TS에서 `import.meta.env.VITE_…`의 타입을 알려주려면 `src/vite-env.d.ts`에 선언합니다:
+
+```ts
+/// <reference types="vite/client" />
+interface ImportMetaEnv { readonly VITE_API_BASE_URL: string }
+interface ImportMeta { readonly env: ImportMetaEnv }
+```
+
+(현재 [`tsconfig.app.json`](./TSX_study/project/tsconfig.app.json)의 `types: ["vite/client"]`가 기본 타입을 제공합니다.)
+
+### 5. 경로 별칭(alias) — 깊은 `../../..` 제거 (선택)
+
+```ts
+// vite.config.ts
+import path from 'node:path'
+export default defineConfig({
+  plugins: [react()],
+  resolve: { alias: { '@': path.resolve(__dirname, 'src') } },
+})
+```
+```json
+// tsconfig.app.json — compilerOptions 안
+"baseUrl": ".", "paths": { "@/*": ["src/*"] }
+```
+
+이후 `import { useAuthStore } from '@/store/authStore'`처럼 씁니다. (shadcn/ui(study13)도 `@/` 별칭을 요구합니다.) `__dirname`은 `vite.config.ts` 실행 환경에서 쓸 수 있도록 `@types/node`가 필요하며 현재 프로젝트에는 이미 설치되어 있습니다.
+
+### 6. `features/` 구조로 키우기
+
+페이지가 늘면 "기술 종류"가 아니라 "기능 단위"로 묶는 방식이 편합니다.
+
+```text
+src/
+├─ features/
+│  ├─ posts/   api.ts, hooks.ts, PostCard.tsx, PostListPage.tsx, types.ts
+│  └─ auth/    api.ts, store.ts, LoginPage.tsx, ProtectedRoute.tsx
+├─ shared/     apiClient.ts, useFetch.ts, ui/…
+└─ app/        App.tsx, routes.tsx
+```
+
+현재 규모(페이지 4개)에서는 `pages/` + `components/` 구조로 충분합니다. **"파일을 찾는 데 시간이 걸리기 시작할 때"** 옮기면 됩니다.
+
+---
+
+## 🐞 오류 노트
+
+| 증상 | 원인 | 해결 |
+|---|---|---|
+| `import.meta.env.VITE_X`가 `undefined` | 접두어 `VITE_` 없음 / `.env` 수정 후 dev 서버 재시작 안 함 | 접두어 확인, 서버 재시작 |
+| 운영 빌드에 개발 URL이 박힘 | 빌드 때 `.env.development`가 사용됨 | `npm run build`는 `production` 모드. 운영 값은 `.env.production` 또는 CI 변수로 주입 |
+| 비밀 키가 번들(`dist/`)에 보임 | `VITE_` 변수에 비밀을 넣음 | 비밀은 백엔드에서만. 프론트에는 공개해도 되는 값만 |
+| `Cannot find module '@/…'` | alias를 Vite에만 / tsconfig에만 설정 | **둘 다** 설정 |
+| 순환 import로 `undefined` | `store`가 `api`를, `api`가 `store`를 서로 import | 의존 방향 정리, 필요하면 `getState()`를 호출 시점에 사용 (study7 인터셉터는 호출 시점에 읽으므로 안전) |
+| Fast Refresh가 컴포넌트 파일에서 동작 안 함 | 컴포넌트 파일에서 훅·상수도 함께 export | 파일 분리 (`authContext.js` / `AuthContext.jsx`) |
+
+---
+
+## ☐ 체크리스트
+
+- [ ] `api / hooks / store / components / pages / types` 각 폴더의 책임을 설명할 수 있다
+- [ ] 페이지가 axios·URL을 직접 알지 않고 `api/` 함수를 호출하게 했다
+- [ ] 스토어를 "바뀌는 이유"별로 나누는 기준을 설명할 수 있다
+- [ ] Context와 Zustand를 같은 로그인 기능으로 구현해 보고 차이(Provider, 리렌더 범위, 컴포넌트 밖 접근)를 말할 수 있다
+- [ ] `.env.development` / `.env.production` / `.env.example`을 만들고 `import.meta.env`로 `baseURL`을 분리했다
+- [ ] `VITE_` 변수가 빌드 결과에 노출됨을 알고 비밀을 넣지 않는다
+- [ ] (선택) `@/` 경로 별칭을 Vite와 tsconfig **양쪽**에 설정했다
+
+---
+
+## ➡️ 다음 단계 연결
+
+구조가 잡혔으니 [study9](./study9.md)에서 **디버깅 도구와 테스트(Vitest + React Testing Library)** 로 이 구조가 깨지지 않는지 확인합니다.
